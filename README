@@ -1,0 +1,12 @@
+A client for Elastic Search in Erlang.
+
+Works:
+
+Create index
+Add doc
+Search
+Get doc
+
+TODO
+
+* Lots ;)
