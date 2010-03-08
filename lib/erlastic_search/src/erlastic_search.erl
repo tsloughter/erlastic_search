@@ -44,7 +44,7 @@ create_index(Params, Index) ->
 %%--------------------------------------------------------------------
 index_doc(Index, Type, Doc) when is_tuple(Doc) ->
     Json = erls_mochijson2:encode(Doc),
-    erls_resource:post(#erls_params{}, Index++"/"++Type, [], [], Json, []).
+    erls_resource:post(#erls_params{}, filename:join(Index, Type), [], [], Json, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -57,7 +57,7 @@ index_doc(Index, Type, Doc) when is_tuple(Doc) ->
 %%--------------------------------------------------------------------
 index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
     Json = erls_mochijson2:encode(Doc),
-    erls_resource:post(Params, Index++"/"++Type, [], [], Json, []).
+    erls_resource:post(Params, filename:join(Index, Type), [], [], Json, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -70,7 +70,7 @@ index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
 %%--------------------------------------------------------------------
 index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
     Json = erls_mochijson2:encode(Doc),
-    erls_resource:put(#erls_params{}, Index++"/"++Type++"/"++Id, [], [], Json, []).
+    erls_resource:put(#erls_params{}, filename:join([Index, Type, Id]), [], [], Json, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -83,7 +83,7 @@ index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
 %%--------------------------------------------------------------------
 index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
     Json = erls_mochijson2:encode(Doc),
-    erls_resource:post(Params, Index++"/"++Type++"/"++Id, [], [], Json, []).
+    erls_resource:post(Params, filename:join([Index, Type, Id]), [], [], Json, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -94,7 +94,7 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 search(Index, Type, Query) ->
-    erls_resource:get(#erls_params{}, Index++"/"++Type++"/_search", [], [{"q", Query}], []).
+    erls_resource:get(#erls_params{}, filename:join([Index, Type, "_search"]), [], [{"q", Query}], []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -105,7 +105,7 @@ search(Index, Type, Query) ->
 %% @end
 %%--------------------------------------------------------------------
 search(Params, Index, Type, Query) ->
-    erls_resource:get(Params, Index++"/"++Type++"/_search", [], [{"q", Query}], []).
+    erls_resource:get(Params, filename:join([Index, Type, "_search"]), [], [{"q", Query}], []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -116,7 +116,7 @@ search(Params, Index, Type, Query) ->
 %% @end
 %%--------------------------------------------------------------------
 get_doc(Index, Type, Id) ->
-    erls_resource:get(#erls_params{}, Index++"/"++Type++"/"++Id, [], [], []).
+    erls_resource:get(#erls_params{}, filename:join([Index, Type, Id]), [], [], []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -127,4 +127,4 @@ get_doc(Index, Type, Id) ->
 %% @end
 %%--------------------------------------------------------------------
 get_doc(Params, Index, Type, Id) ->
-    erls_resource:get(Params, Index++"/"++Type++"/"++Id, [], [], []).
+    erls_resource:get(Params, filename:join([Index, Type, Id]), [], [], []).
