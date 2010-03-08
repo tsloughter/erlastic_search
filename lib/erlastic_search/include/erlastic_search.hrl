@@ -1,7 +1,5 @@
 -type header() :: {string() | atom(), string()}.
 -type headers() :: [header()].
-%% In R13B bool() is now called boolean()
--type boolean() :: bool().
 
 
 -record(erls_params, {
