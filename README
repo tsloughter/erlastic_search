@@ -1,5 +1,20 @@
 A client for Elastic Search in Erlang.
 
+Install:
+
+Easiest:
+
+Download and install faxien from erlware.org
+
+faxien ir sinan
+faxien ia crypto
+faxien ia ssl
+faxien ia lhttpc
+
+In your erlastic_search source dir:
+
+sinan dist
+
 Works:
 
 Create index
