@@ -2,14 +2,15 @@
 %%% @author Tristan Sloughter <>
 %%% @copyright (C) 2010, Tristan Sloughter
 %%% @doc
+%%% Thanks couchbeam! http://github.com/benoitc/couchbeam
+%%% From which most of this was taken :)
 %%%
 %%% @end
 %%% Created : 14 Feb 2010 by Tristan Sloughter <>
 %%%-------------------------------------------------------------------
 -module(erls_resource).
 
--export([get/5, head/5, delete/5, post/6, put/6]).
--export([get_body_part/1,get_body_part/2]).
+-export([get/5, get/6, head/5, delete/5, post/6, put/6]).
 
 -include("erlastic_search.hrl").
 
@@ -174,8 +175,7 @@ make_body({Fun, State}, Headers, Options) when is_function(Fun) ->
     end;
 make_body(_, _, _) ->
     {error, "body invalid"}.
-     
-     
+          
 stream_body({Source, State}, CurrentState) ->
     do_stream_body(Source, Source(State), CurrentState);
 stream_body(Source, CurrentState) ->
@@ -193,34 +193,3 @@ do_stream_body(Source, Resp, CurrentState) ->
             lhttpc:send_body_part(CurrentState, http_eob)
     end.
             
-%% @spec (HTTPClient :: pid()) -> Result
-%%   Result = {ok, Bin} | {ok, {http_eob, Trailers}} 
-%%   Trailers = [{Header, Value}]
-%%   Header = string() | binary() | atom()
-%%   Value = string() | binary()
-%% @doc Reads a body part from an ongoing response when
-%% `Streaming` option is true in `couchbeam_db:fetch_attchment/4`. The default timeout,
-%% `infinity' will be used. 
-%% Would be the same as calling
-%% `get_body_part(HTTPClient, infinity)'.
-%% @end
--spec get_body_part(pid()) -> {ok, binary()} | {ok, {http_eob, headers()}}.
-get_body_part(Pid) ->
-    get_body_part(Pid, infinity).
-
-%% @spec (HTTPClient :: pid(), Timeout:: Timeout) -> Result
-%%   Timeout = integer() | infinity
-%%   Result = {ok, Bin} | {ok, {http_eob, Trailers}} 
-%%   Trailers = [{Header, Value}]
-%%   Header = string() | binary() | atom()
-%%   Value = string() | binary()
-%% @doc Reads a body part from an ongoing response when
-%% `Streaming` option is true in `couchbeam_db:fetch_attchment/4`.
-%% `Timeout' is the timeout for reading the next body part in milliseconds. 
-%% `http_eob' marks the end of the body. If there were Trailers in the
-%% response those are returned with `http_eob' as well. 
-%% @end
--spec get_body_part(pid(), timeout()) -> 
-        {ok, binary()} | {ok, {http_eob, headers()}}.
-get_body_part(Pid, Timeout) ->
-    lhttpc:get_body_part(Pid, Timeout).

@@ -6,6 +6,7 @@
    {modules, [erlastic_search,
               erls_resource,
 
+              erls_query_constructor,
               erls_mochijson2]},
    {registered,[]},
    {applications, [kernel, stdlib, sasl, gas, ssl, crypto, lhttpc]},
