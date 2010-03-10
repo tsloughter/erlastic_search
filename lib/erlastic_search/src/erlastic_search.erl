@@ -20,7 +20,7 @@
 %% @end
 %%--------------------------------------------------------------------
 create_index(Index) ->
-    erls_resource:put(#erls_params{}, Index, [], [], [], []).
+    create_index(#erls_params{}, Index).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -43,9 +43,8 @@ create_index(Params, Index) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc(Index, Type, Doc) when is_tuple(Doc) ->
-    Json = erls_mochijson2:encode(Doc),
-    erls_resource:post(#erls_params{}, filename:join(Index, Type), [], [], Json, []).
-
+    index_doc(#erls_params, Index, Type, Doc).
+    
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a Json document described in 
@@ -69,9 +68,8 @@ index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
-    Json = erls_mochijson2:encode(Doc),
-    erls_resource:put(#erls_params{}, filename:join([Index, Type, Id]), [], [], Json, []).
-
+    index_doc_with_id(#erls_params, Index, Type, Id, Doc).
+    
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a Json document described in 
@@ -94,7 +92,7 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 search(Index, Type, Query) ->
-    erls_resource:get(#erls_params{}, filename:join([Index, Type, "_search"]), [], [{"q", Query}], []).
+    search(#erls_params, Index, Type, Query).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -116,7 +114,7 @@ search(Params, Index, Type, Query) ->
 %% @end
 %%--------------------------------------------------------------------
 get_doc(Index, Type, Id) ->
-    erls_resource:get(#erls_params{}, filename:join([Index, Type, Id]), [], [], []).
+    get_doc(#erls_params{}, Index, Type, Id).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -128,3 +126,28 @@ get_doc(Index, Type, Id) ->
 %%--------------------------------------------------------------------
 get_doc(Params, Index, Type, Id) ->
     erls_resource:get(Params, filename:join([Index, Type, Id]), [], [], []).
+
+flush_index(Index) ->
+    flush_index(#erls_params{}, Index).
+
+flush_index(Params, Index) ->
+    ok.
+
+refresh_index(Index) ->
+    refresh_index(#erls_params{}, Index).
+
+refresh_index(Params, Index) ->
+    ok.
+
+delete_index(Index) ->
+    delete_index(#erls_params{}, Index).
+
+delete_index(Params, Index) ->
+    ok.
+
+optimize_index(Index) ->
+    optimize_index(#erls_parms{}, Index).
+
+optimize_index(Params, Index) ->
+    ok.
+
