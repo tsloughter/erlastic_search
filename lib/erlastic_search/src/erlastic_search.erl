@@ -43,7 +43,7 @@ create_index(Params, Index) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc(Index, Type, Doc) when is_tuple(Doc) ->
-    index_doc(#erls_params, Index, Type, Doc).
+    index_doc(#erls_params{}, Index, Type, Doc).
     
 %%--------------------------------------------------------------------
 %% @doc
@@ -68,7 +68,7 @@ index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
-    index_doc_with_id(#erls_params, Index, Type, Id, Doc).
+    index_doc_with_id(#erls_params{}, Index, Type, Id, Doc).
     
 %%--------------------------------------------------------------------
 %% @doc
@@ -92,7 +92,7 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 search(Index, Type, Query) ->
-    search(#erls_params, Index, Type, Query).
+    search(#erls_params{}, Index, Type, Query).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -146,7 +146,7 @@ delete_index(Params, Index) ->
     ok.
 
 optimize_index(Index) ->
-    optimize_index(#erls_parms{}, Index).
+    optimize_index(#erls_params{}, Index).
 
 optimize_index(Params, Index) ->
     ok.
