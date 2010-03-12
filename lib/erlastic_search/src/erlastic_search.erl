@@ -83,6 +83,12 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
     Json = erls_mochijson2:encode(Doc),
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], [], Json, []).
 
+search(Index, Query) ->
+    search(#erls_params{}, Index, "", Query).
+
+search(Params, Index, Query) when is_record(Params, erls_params) ->
+    search(Params, Index, "", Query);
+
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a query as "key:value" and sends 
@@ -92,7 +98,7 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 search(Index, Type, Query) ->
-    search(#erls_params{}, Index, Type, Query).
+    search(#erls_params{}, Index, Type, Query). 
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -102,8 +108,14 @@ search(Index, Type, Query) ->
 %% @spec search(Params, Index, Type, Query) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+search(Params, Index=[H|_T], Type=[H2|_T2], Query) when not is_list(H), is_list(H2) ->
+    search(Params, [Index], Type, Query);
+search(Params, Index=[H|_T], Type=[H2|_T2], Query) when is_list(H), not is_list(H2) ->
+    search(Params, Index, [Type], Query);
+search(Params, Index=[H|_T], Type=[H2|_T2], Query) when not is_list(H), not is_list(H2) ->
+    search(Params, [Index], [Type], Query);
 search(Params, Index, Type, Query) ->
-    erls_resource:get(Params, filename:join([Index, Type, "_search"]), [], [{"q", Query}], []).
+    erls_resource:get(Params, filename:join([erls_utils:comma_separate(Index), Type, "_search"]), [], [{"q", Query}], []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -130,24 +142,48 @@ get_doc(Params, Index, Type, Id) ->
 flush_index(Index) ->
     flush_index(#erls_params{}, Index).
 
+flush_index(Params, Index=[H|_T]) when not is_list(H) ->
+    flush_index(Params, [Index]);
 flush_index(Params, Index) ->
-    ok.
+    erls_resource:post(Params, filename:join([erls_utils:comma_separate(Index), "_flush"]), [], [], [], []).
+
+flush_all() ->
+    refresh_all(#erls_params{}).
+
+flush_all(Params) ->
+    erls_resource:post(Params, "_flush", [], [], [], []).
 
 refresh_index(Index) ->
     refresh_index(#erls_params{}, Index).
 
+refresh_index(Params, Index=[H|_T]) when not is_list(H) ->
+    refresh_index(Params, [Index]);
 refresh_index(Params, Index) ->
-    ok.
+    erls_resource:post(Params, filename:join([erls_utils:comma_separate(Index), "_refresh"]), [], [], [], []).
 
-delete_index(Index) ->
-    delete_index(#erls_params{}, Index).
+refresh_all() ->
+    refresh_all(#erls_params{}).
 
-delete_index(Params, Index) ->
-    ok.
+refresh_all(Params) ->
+    erls_resource:post(Params, "_refresh", [], [], [], []).
+
+delete_doc(Index, Type, Id) ->
+    delete_doc(#erls_params{}, Index, Type, Id).
+
+delete_doc(Params, Index, Type, Id) ->
+    erls_resource:delete(Params, filename:join([Index, Type, Id]), [], [], []).
+
+delete_doc_by_query(Index, Type, Query) ->
+    delete_doc_by_query(#erls_params{}, Index, Type, Query).
+
+delete_doc_by_query(Params, Index, Type, Query) ->
+    erls_resource:delete(Params, filename:join([Index, Type]), [], [{"q", Query}], []).
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
 
+optimize_index(Params, Index=[H|_T]) when not is_list(H)->
+    optimize_index(Params, [Index]);
 optimize_index(Params, Index) ->
-    ok.
+    erls_resource:post(Params, filename:join([erls_utils:comma_separate(Index), "_optimize"]), [], [], [], []).
 
