@@ -2,7 +2,7 @@
 %% application.
 {application, erlastic_search, 
   [{description, "An Erlang app for communicating with Elastic Search's rest interface."},
-   {vsn, "0.1.0"},
+   {vsn, "0.2.0"},
    {modules, [erlastic_search,
               erls_resource,
               erls_utils,

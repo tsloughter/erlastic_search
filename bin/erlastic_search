@@ -7,7 +7,7 @@ export ROOTDIR=$(dirname $PROG_DIR)
 
 #### Fill in values for these variables ####
 REL_NAME=erlastic_search
-REL_VSN=0.1.0.0
+REL_VSN=0.2.0.0
 ERTS_VSN=5.7.4
 INVOCATION_SUFFIX="-prefix $ROOTDIR"
 ###########################################

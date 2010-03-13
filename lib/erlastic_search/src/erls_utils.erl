@@ -13,5 +13,5 @@ comma_separate([H | []]) ->
     H;
 comma_separate(List) ->
     lists:foldl(fun(String, Acc) ->
-                        io_list:format("~s,~s", String, Acc)
+                        io_lib:format("~s,~s", [String, Acc])
                 end, "", List).
