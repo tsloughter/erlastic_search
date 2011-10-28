@@ -86,14 +86,18 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], [], Json, []).
 
-%% Docuemnts is [ {Id,Json} ... ]
-bulk_index_docs_with_ids(Params, Index, Type, Documents) ->
-    Body = lists:map(fun({Id,Json}) ->
+to_bin(A) when is_atom(A)   -> to_bin(atom_to_list(A));
+to_bin(L) when is_list(L)   -> list_to_binary(L);
+to_bin(B) when is_binary(B) -> B.
+
+%% Documents is [ {Index, Type, Id, Json}, ... ]
+bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
+    Body = lists:map(fun({Index, Type, Id, Json}) ->
          Header = erls_mochijson2:encode({struct, [
                      {<<"index">>, [ {struct, [
-                                {<<"_index">>, list_to_binary(Index)},
-                                {<<"_type">>, list_to_binary(Type)},
-                                {<<"_id">>, list_to_binary(Id)}
+                                {<<"_index">>, to_bin(Index)},
+                                {<<"_type">>, to_bin(Type)},
+                                {<<"_id">>, to_bin(Id)}
                             ]}]}]}),
         [
           Header,
@@ -101,7 +105,7 @@ bulk_index_docs_with_ids(Params, Index, Type, Documents) ->
           Json,
           <<"\n">>
         ]
-    end, Documents),
+    end, IndexTypeIdJsonTuples),
     erls_resource:post(Params, "/_bulk", [], [], Body, []).
     
 
