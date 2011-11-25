@@ -9,7 +9,7 @@
 -module(erls_query_constructor).
 -compile([export_all]).
 
--include("erlastic_search.hrl").
+-include_lib("erlastic_search/include/erlastic_search.hrl").
 
 term_query() ->
     ok.

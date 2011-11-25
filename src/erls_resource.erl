@@ -12,7 +12,7 @@
 
 -export([get/5, get/6, head/5, delete/5, post/6, put/6]).
 
--include("erlastic_search.hrl").
+-include_lib("erlastic_search/include/erlastic_search.hrl").
 
 -record(response, {
           method,
@@ -30,7 +30,7 @@ get(State, Path, Headers, Params, Body, Opts) ->
 
 head(State, Path, Headers, Params, Opts) ->
     request(State, "HEAD", Path, Headers, Params, [], Opts).
-    
+
 delete(State, Path, Headers, Params, Opts) ->
     request(State, "DELETE", Path, Headers, Params, [], Opts).
 
@@ -39,15 +39,15 @@ post(State, Path, Headers, Params, Body, Opts) ->
 
 put(State, Path, Headers, Params, Body, Opts) ->
     request(State, "PUT", Path, Headers, Params, Body, Opts).
-    
-    
+
+
 request(State, Method, Path, Headers, Params, Body, Options) ->
-    Path1 = lists:append([Path, 
+    Path1 = lists:append([Path,
                           case Params of
                               [] -> [];
                               Props -> "?" ++ encode_query(Props)
                           end]),
-    %Headers1 = make_auth(State, 
+    %Headers1 = make_auth(State,
     %                     default_header("Content-Type", "application/json", Headers)),
     Headers1 = Headers,
      case has_body(Method) of
@@ -69,25 +69,25 @@ do_request(#erls_params{host=Host, port=Port, ssl=Ssl, timeout=Timeout},
         {ok, {{StatusCode, ReasonPhrase}, ResponseHeaders, ResponseBody}} ->
             State = #response{method    = Method,
                               status    = StatusCode,
-                              reason    = ReasonPhrase, 
+                              reason    = ReasonPhrase,
                               headers   = ResponseHeaders,
                               body      = ResponseBody},
-            
+
             make_response(State);
         {ok, UploadState} -> %% we stream
             case stream_body(BodyFun, UploadState) of
                 {ok, {{StatusCode, ReasonPhrase}, ResponseHeaders, ResponseBody}} ->
                     State = #response{method    = Method,
                                       status    = StatusCode,
-                                      reason    = ReasonPhrase, 
+                                      reason    = ReasonPhrase,
                                       headers   = ResponseHeaders,
                                       body      = ResponseBody},
-                    
+
                     make_response(State);
                 Error -> Error
             end;
         Error -> Error
-    end.  
+    end.
 
 make_response(#response{method=Method, status=Status, reason=Reason, body=Body}) ->
     if
@@ -109,7 +109,7 @@ make_response(#response{method=Method, status=Status, reason=Reason, body=Body})
                             {ok, Body};
                         false ->
                             try mochijson2:decode(binary_to_list(Body)) of
-                                Resp1 -> 
+                                Resp1 ->
                                     case Resp1 of
                                         {[{<<"ok">>, true}]} -> ok;
                                         {[{<<"ok">>, true}|Res]} -> {ok, {Res}};
@@ -123,7 +123,7 @@ make_response(#response{method=Method, status=Status, reason=Reason, body=Body})
     end.
 
 encode_query(Props) ->
-    P = fun({A,B}, AccIn) -> io_lib:format("~s=~s&", [A,B]) ++ AccIn end, 
+    P = fun({A,B}, AccIn) -> io_lib:format("~s=~s&", [A,B]) ++ AccIn end,
     lists:flatten(lists:foldr(P, [], Props)).
 
 default_header(K, V, H) ->
@@ -131,7 +131,7 @@ default_header(K, V, H) ->
         true -> H;
         false -> [{K, V}|H]
     end.
-    
+
 has_body("HEAD") ->
     false;
 has_body("GET") ->
@@ -140,7 +140,7 @@ has_body("DELETE") ->
     false;
 has_body(_) ->
     true.
-    
+
 default_content_length(B, H) ->
     default_header("Content-Length", integer_to_list(erlang:iolist_size(B)), H).
 
@@ -149,7 +149,7 @@ body_length(H) ->
         undefined -> false;
         _ -> true
     end.
-    
+
 make_body(Body, Headers, Options) when is_list(Body) ->
     {default_content_length(Body, Headers), Options, Body, nil};
 make_body(Body, Headers, Options) when is_binary(Body) ->
@@ -168,19 +168,19 @@ make_body({Fun, State}, Headers, Options) when is_function(Fun) ->
         true ->
             Options1 = [{partial_upload, infinity}|Options],
             {ok, InitialState, NextState} = Fun(State),
-            
+
             {Headers, Options1, InitialState, {Fun, NextState}};
         false ->
             {error,  "Content-Length undefined"}
     end;
 make_body(_, _, _) ->
     {error, "body invalid"}.
-          
+
 stream_body({Source, State}, CurrentState) ->
     do_stream_body(Source, Source(State), CurrentState);
 stream_body(Source, CurrentState) ->
     do_stream_body(Source, Source(), CurrentState).
-    
+
 do_stream_body(Source, Resp, CurrentState) ->
     case Resp of
         {ok, Data} ->
@@ -192,4 +192,4 @@ do_stream_body(Source, Resp, CurrentState) ->
         eof ->
             lhttpc:send_body_part(CurrentState, http_eob)
     end.
-            
+
