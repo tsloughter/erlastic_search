@@ -1,0 +1,5 @@
+*~
+deps/
+*.log
+*.dump
+ebin/
