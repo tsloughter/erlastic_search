@@ -1,27 +1,13 @@
 A client for Elastic Search in Erlang.
+======================================
 
-Install:
+* rebar
+* uses lhttpc http library
 
-Easiest:
+QUICKSTART
+----------
 
-Download and install faxien from erlware.org
+$ rebar get-deps
+$ rebar compile
+$ ./start-dev.sh
 
-faxien ir sinan
-faxien ia crypto
-faxien ia ssl
-faxien ia lhttpc
-
-In your erlastic_search source dir:
-
-sinan dist
-
-Works:
-
-Create index
-Add doc
-Search
-Get doc
-
-TODO
-
-* Lots :)
