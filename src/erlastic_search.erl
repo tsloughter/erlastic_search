@@ -80,7 +80,7 @@ index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
-    Json = erls_mochijson2:encode(Doc),
+    Json = iolist_to_binary(erls_mochijson2:encode(Doc)),
     index_doc_with_id(Params, Index, Type, Id, Json);
 
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
