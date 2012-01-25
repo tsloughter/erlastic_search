@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @author Tristan Sloughter <>
-%%% @copyright (C) 2010, Tristan Sloughter
+%%% @copyright (C) 2010, 2012, Tristan Sloughter
 %%% @doc
 %%%
 %%% @end
@@ -55,7 +55,7 @@ index_doc(Index, Type, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
-    Json = erls_mochijson2:encode(Doc),
+    Json = mochijson2:encode(Doc),
     erls_resource:post(Params, filename:join(Index, Type), [], [], Json, []).
 
 %%--------------------------------------------------------------------
@@ -80,7 +80,7 @@ index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% @end
 %%--------------------------------------------------------------------
 index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
-    Json = iolist_to_binary(erls_mochijson2:encode(Doc)),
+    Json = iolist_to_binary(mochijson2:encode(Doc)),
     index_doc_with_id(Params, Index, Type, Id, Json);
 
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
@@ -93,19 +93,19 @@ to_bin(B) when is_binary(B) -> B.
 %% Documents is [ {Index, Type, Id, Json}, ... ]
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
     Body = lists:map(fun({Index, Type, Id, Json}) ->
-         Header = erls_mochijson2:encode({struct, [
-                     {<<"index">>, [ {struct, [
-                                {<<"_index">>, to_bin(Index)},
-                                {<<"_type">>, to_bin(Type)},
-                                {<<"_id">>, to_bin(Id)}
-                            ]}]}]}),
-        [
-          Header,
-          <<"\n">>,
-          Json,
-          <<"\n">>
-        ]
-    end, IndexTypeIdJsonTuples),
+         Header = mochijson2:encode({struct, [
+                                              {<<"index">>, [ {struct, [
+                                                                        {<<"_index">>, to_bin(Index)},
+                                                                        {<<"_type">>, to_bin(Type)},
+                                                                        {<<"_id">>, to_bin(Id)}
+                                                                       ]}]}]}),
+                             [
+                              Header,
+                              <<"\n">>,
+                              Json,
+                              <<"\n">>
+                             ]
+                     end, IndexTypeIdJsonTuples),
     erls_resource:post(Params, "/_bulk", [], [], Body, []).
 
 
