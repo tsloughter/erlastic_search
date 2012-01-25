@@ -5,7 +5,7 @@ otp_release:
 
 before_script: "rebar deps"
 
-script: "./sinan eunit"
+script: "rebar eunit"
 
 notifications:
    recipients:
