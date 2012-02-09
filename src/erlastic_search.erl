@@ -84,7 +84,10 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
     index_doc_with_id(Params, Index, Type, Id, Json);
 
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
-    erls_resource:post(Params, filename:join([Index, Type, Id]), [], [], Json, []).
+    index_doc_with_id_opts(Params, Index, Type, Id, Json, []).
+
+index_doc_with_id_opts(Params, Index, Type, Id, Json, Opts) when is_binary(Json), is_list(Opts) ->
+    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Json, []).
 
 to_bin(A) when is_atom(A)   -> to_bin(atom_to_list(A));
 to_bin(L) when is_list(L)   -> list_to_binary(L);
