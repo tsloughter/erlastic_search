@@ -84,7 +84,10 @@ index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
     index_doc_with_id(Params, Index, Type, Id, Json);
 
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
-    erls_resource:post(Params, filename:join([Index, Type, Id]), [], [], Json, []).
+    index_doc_with_id_opts(Params, Index, Type, Id, Json, []).
+
+index_doc_with_id_opts(Params, Index, Type, Id, Json, Opts) when is_binary(Json), is_list(Opts) ->
+    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Json, []).
 
 to_bin(A) when is_atom(A)   -> to_bin(atom_to_list(A));
 to_bin(L) when is_list(L)   -> list_to_binary(L);
@@ -110,10 +113,10 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
 
 
 search(Index, Query) ->
-    search(#erls_params{}, Index, "", Query).
+    search(#erls_params{}, Index, "", Query, []).
 
 search(Params, Index, Query) when is_record(Params, erls_params) ->
-    search(Params, Index, "", Query);
+    search(Params, Index, "", Query, []);
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -124,8 +127,10 @@ search(Params, Index, Query) when is_record(Params, erls_params) ->
 %% @end
 %%--------------------------------------------------------------------
 search(Index, Type, Query) ->
-    search(#erls_params{}, Index, Type, Query).
+    search(#erls_params{}, Index, Type, Query, []). 
 
+search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
+    search(#erls_params{}, Index, Type, Query, [{"size", lists:flatten(io_lib:format("~B",[Limit]))}]). 
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a query as "key:value" and sends
@@ -134,14 +139,14 @@ search(Index, Type, Query) ->
 %% @spec search(Params, Index, Type, Query) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-search(Params, Index=[H|_T], Type=[H2|_T2], Query) when not is_list(H), is_list(H2) ->
-    search(Params, [Index], Type, Query);
-search(Params, Index=[H|_T], Type=[H2|_T2], Query) when is_list(H), not is_list(H2) ->
-    search(Params, Index, [Type], Query);
-search(Params, Index=[H|_T], Type=[H2|_T2], Query) when not is_list(H), not is_list(H2) ->
-    search(Params, [Index], [Type], Query);
-search(Params, Index, Type, Query) ->
-    erls_resource:get(Params, filename:join([erls_utils:comma_separate(Index), Type, "_search"]), [], [{"q", Query}], []).
+search(Params, Index=[H|_T], Type=[H2|_T2], Query, Opts) when not is_list(H), is_list(H2) ->
+    search(Params, [Index], Type, Query, Opts);
+search(Params, Index=[H|_T], Type=[H2|_T2], Query, Opts) when is_list(H), not is_list(H2) ->
+    search(Params, Index, [Type], Query, Opts);
+search(Params, Index=[H|_T], Type=[H2|_T2], Query, Opts) when not is_list(H), not is_list(H2) ->
+    search(Params, [Index], [Type], Query, Opts);
+search(Params, Index, Type, Query, Opts) ->
+    erls_resource:get(Params, filename:join([erls_utils:comma_separate(Index), Type, "_search"]), [], [{"q", Query}]++Opts, []).
 
 %%--------------------------------------------------------------------
 %% @doc
