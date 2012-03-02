@@ -3,7 +3,7 @@ language: erlang
 otp_release:
    - R15B
 
-before_script: "rebar deps"
+before_script: "rebar get-deps"
 
 script: "rebar eunit"
 
