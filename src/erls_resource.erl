@@ -23,7 +23,7 @@
          }).
 
 get(State, Path, Headers, Params, Opts) ->
-    request(State, "GET", Path, Headers, Params, [], Opts).
+    get(State, Path, Headers, Params, [], Opts).
 
 get(State, Path, Headers, Params, Body, Opts) ->
     request(State, "GET", Path, Headers, Params, Body, Opts).
@@ -50,7 +50,7 @@ request(State, Method, Path, Headers, Params, Body, Options) ->
     %Headers1 = make_auth(State,
     %                     default_header("Content-Type", "application/json", Headers)),
     Headers1 = Headers,
-     case has_body(Method) of
+    case Body /= [] orelse Body /= <<>> orelse has_body(Method) of
          true ->
              case make_body(Body, Headers1, Options) of
                  {Headers2, Options1, InitialBody, BodyFun} ->
@@ -91,14 +91,15 @@ do_request(#erls_params{host=Host, port=Port, ssl=Ssl, timeout=Timeout},
 
 make_response(#response{method=Method, status=Status, reason=Reason, body=Body}) ->
     if
-        Status >= 400, Status == 404 ->
+        Status == 404 ->
             {error, not_found};
-        Status >= 400, Status == 409 ->
+        Status == 409 ->
              {error, conflict};
-        Status >= 400, Status == 412 ->
+        Status == 412 ->
              {error, precondition_failed};
         Status >= 400 ->
-             {error, {unknown_error, Status}};
+	     %error_logger:error_msg("~p:~p: Error ~p: ~400P~n", [?MODULE, ?LINE, Status, Body, 16]),
+             {error, {Status, Body}};
         true ->
             if
                 Method == "HEAD" ->
