@@ -135,7 +135,7 @@ default_header(K, V, H) ->
 has_body("HEAD") ->
     false;
 has_body("GET") ->
-    false;
+    true;
 has_body("DELETE") ->
     false;
 has_body(_) ->
