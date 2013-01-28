@@ -5,6 +5,6 @@
    {vsn, "0.2.0"},
    {modules, []},
    {registered,[]},
-   {applications, [kernel, stdlib, sasl, gas, ssl, crypto, lhttpc]},
+   {applications, [kernel, stdlib, sasl, ssl, crypto, lhttpc]},
    {start_phases, []}]}.
 

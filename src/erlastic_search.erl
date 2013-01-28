@@ -39,7 +39,7 @@ create_index(Params, Index) ->
 %% Erlang terms, converts the document to a string and passes to the
 %% default server. Elastic Search provides the doc with an id.
 %%
-%% @spec index(Index, Type, Doc) -> {ok, Data} | {error, Error}
+%% @spec index(Index, Type, Doc) -> {ok, Data} | {error, Error}v
 %% @end
 %%--------------------------------------------------------------------
 index_doc(Index, Type, Doc) when is_tuple(Doc) ->
