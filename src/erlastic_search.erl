@@ -15,10 +15,9 @@
 %% @doc
 %% Takes the name of an index to create and sends the request to
 %% Elastic Search, the default settings on localhost.
-%%
-%% @spec create_index(Index) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec create_index(binary()) -> {ok, tuple()} | {error, any()}.
 create_index(Index) ->
     create_index(#erls_params{}, Index).
 
@@ -26,10 +25,9 @@ create_index(Index) ->
 %% @doc
 %% Takes the name of an index and the record describing the servers
 %% details to create and sends the request to Elastic Search.
-%%
-%% @spec create_index(Params, Index) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec create_index(record(erls_params), binary()) -> {ok, tuple()} | {error, any()}.
 create_index(Params, Index) ->
     erls_resource:put(Params, Index, [], [], [], []).
 
@@ -38,11 +36,10 @@ create_index(Params, Index) ->
 %% Takes the index and type name and a Json document described in
 %% Erlang terms, converts the document to a string and passes to the
 %% default server. Elastic Search provides the doc with an id.
-%%
-%% @spec index(Index, Type, Doc) -> {ok, Data} | {error, Error}v
 %% @end
 %%--------------------------------------------------------------------
-index_doc(Index, Type, Doc) when is_tuple(Doc) ->
+-spec index_doc(binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+index_doc(Index, Type, Doc) ->
     index_doc(#erls_params{}, Index, Type, Doc).
 
 %%--------------------------------------------------------------------
@@ -50,12 +47,11 @@ index_doc(Index, Type, Doc) when is_tuple(Doc) ->
 %% Takes the index and type name and a Json document described in
 %% Erlang terms, converts the document to a string and passes to the
 %% server. Elastic Search provides the doc with an id.
-%%
-%% @spec index(Params Index, Type, Doc) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
-    Json = mochijson2:encode(Doc),
+-spec index_doc(record(erls_params), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+index_doc(Params, Index, Type, Doc) when is_list(Doc) ->
+    Json = jsx:encode(Doc),
     erls_resource:post(Params, filename:join(Index, Type), [], [], Json, []).
 
 %%--------------------------------------------------------------------
@@ -63,11 +59,10 @@ index_doc(Params, Index, Type, Doc) when is_tuple(Doc) ->
 %% Takes the index and type name and a Json document described in
 %% Erlang terms, converts the document to a string after adding the _id field
 %% and passes to the default server.
-%%
-%% @spec index(Index, Type, Id, Doc) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
+-spec index_doc_with_id(binary(), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+index_doc_with_id(Index, Type, Id, Doc) when is_list(Doc) ->
     index_doc_with_id(#erls_params{}, Index, Type, Id, Doc).
 
 %%--------------------------------------------------------------------
@@ -75,87 +70,69 @@ index_doc_with_id(Index, Type, Id, Doc) when is_tuple(Doc) ->
 %% Takes the index and type name and a Json document described in
 %% Erlang terms, converts the document to a string after adding the _id field
 %% and passes to the server.
-%%
-%% @spec index(Params, Index, Type, Id, Doc) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-index_doc_with_id(Params, Index, Type, Id, Doc) when is_tuple(Doc) ->
-    Json = iolist_to_binary(mochijson2:encode(Doc)),
+-spec index_doc_with_id(record(erls_params), binary(), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+index_doc_with_id(Params, Index, Type, Id, Doc) when is_list(Doc) ->
+    Json = jsx:encode(Doc),
     index_doc_with_id(Params, Index, Type, Id, Json);
-
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
     index_doc_with_id_opts(Params, Index, Type, Id, Json, []).
 
+-spec index_doc_with_id_opts(record(erls_params), binary(), binary(), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
 index_doc_with_id_opts(Params, Index, Type, Id, Json, Opts) when is_binary(Json), is_list(Opts) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Json, []).
-
-to_bin(A) when is_atom(A)   -> to_bin(atom_to_list(A));
-to_bin(L) when is_list(L)   -> list_to_binary(L);
-to_bin(B) when is_binary(B) -> B.
 
 %% Documents is [ {Index, Type, Id, Json}, ... ]
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
     Body = lists:map(fun({Index, Type, Id, Json}) ->
-         Header = mochijson2:encode({struct, [
-                                              {<<"index">>, [ {struct, [
-                                                                        {<<"_index">>, to_bin(Index)},
-                                                                        {<<"_type">>, to_bin(Type)},
-                                                                        {<<"_id">>, to_bin(Id)}
-                                                                       ]}]}]}),
+                             Header = jsx:encode([
+                                                  {<<"index">>, [{[
+                                                                  {<<"_index">>, Index},
+                                                                  {<<"_type">>, Type},
+                                                                  {<<"_id">>, Id}
+                                                                  ]}]}]),
                              [
-                              Header,
-                              <<"\n">>,
-                              Json,
-                              <<"\n">>
+                             Header,
+                             <<"\n">>,
+                             Json,
+                             <<"\n">>
                              ]
                      end, IndexTypeIdJsonTuples),
-    erls_resource:post(Params, "/_bulk", [], [], Body, []).
+    erls_resource:post(Params, <<"/_bulk">>, [], [], Body, []).
 
 
-search(Index, Query) ->
-    search(#erls_params{}, Index, "", Query, []).
-
-search(Params, Index, Query) when is_record(Params, erls_params) ->
-    search(Params, Index, "", Query, []);
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Takes the index and type name and a query as "key:value" and sends
-%% it to the default Elastic Search server on localhost:9100
-%%
-%% @spec search(Index, Type, Query) -> {ok, Data} | {error, Error}
-%% @end
-%%--------------------------------------------------------------------
-search(Index, Type, Query) ->
-    search(#erls_params{}, Index, Type, Query, []). 
-
-search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
-    search(#erls_params{}, Index, Type, Query, [{"size", lists:flatten(io_lib:format("~B",[Limit]))}]). 
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a query as "key:value" and sends
 %% it to the Elastic Search server specified in Params.
-%%
-%% @spec search(Params, Index, Type, Query) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
-search(Params, Index=[H|_T], Type=[H2|_T2], Query, Opts) when not is_list(H), is_list(H2) ->
-    search(Params, [Index], Type, Query, Opts);
-search(Params, Index=[H|_T], Type=[H2|_T2], Query, Opts) when is_list(H), not is_list(H2) ->
-    search(Params, Index, [Type], Query, Opts);
-search(Params, Index=[H|_T], Type=[H2|_T2], Query, Opts) when not is_list(H), not is_list(H2) ->
-    search(Params, [Index], [Type], Query, Opts);
+-spec search(binary() | list(), binary()) -> {ok, tuple()} | {error, any()}.
+search(Index, Query) ->
+    search(#erls_params{}, Index, <<>>, Query, []).
+
+-spec search(binary() | list() | record(erls_params), binary() | list(), binary()) -> {ok, tuple()} | {error, any()}.
+search(Params, Index, Query) when is_record(Params, erls_params) ->
+    search(Params, Index, <<>>, Query, []);
+search(Index, Type, Query) ->
+    search(#erls_params{}, Index, Type, Query, []). 
+
+-spec search_limit(binary() | list(), binary(), binary(), integer()) -> {ok, tuple()} | {error, any()}.
+search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
+    search(#erls_params{}, Index, Type, Query, [{<<"size">>, integer_to_list(Limit)}]).
+
+-spec search(record(erls_params), list() | binary(), list() | binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
 search(Params, Index, Type, Query, Opts) ->
-    erls_resource:get(Params, filename:join([erls_utils:comma_separate(Index), Type, "_search"]), [], [{"q", Query}]++Opts, []).
+    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, []).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a doc id and sends
 %% it to the default Elastic Search server on localhost:9100
-%%
-%% @spec index(Index, Type, Id, Doc) -> {ok, Data} | {error, Error}
 %% @end
 %%--------------------------------------------------------------------
+-spec get_doc(binary(), binary(), binary()) -> {ok, tuple()} | {error, any()}.
 get_doc(Index, Type, Id) ->
     get_doc(#erls_params{}, Index, Type, Id).
 
@@ -164,39 +141,36 @@ get_doc(Index, Type, Id) ->
 %% Takes the index and type name and a doc id and sends
 %% it to the Elastic Search server specified in Params.
 %%
-%% @spec index(Params, Index, Type, Id, Doc) -> {ok, Data} | {error, Error}
+%% @spec
 %% @end
 %%--------------------------------------------------------------------
+-spec get_doc(record(erls_params), binary(), binary(), binary()) -> {ok, tuple()} | {error, any()}.
 get_doc(Params, Index, Type, Id) ->
     erls_resource:get(Params, filename:join([Index, Type, Id]), [], [], []).
 
 flush_index(Index) ->
     flush_index(#erls_params{}, Index).
 
-flush_index(Params, Index=[H|_T]) when not is_list(H) ->
-    flush_index(Params, [Index]);
 flush_index(Params, Index) ->
-    erls_resource:post(Params, filename:join([erls_utils:comma_separate(Index), "_flush"]), [], [], [], []).
+    erls_resource:post(Params, filename:join([commas(Index), <<"_flush">>]), [], [], [], []).
 
 flush_all() ->
     refresh_all(#erls_params{}).
 
 flush_all(Params) ->
-    erls_resource:post(Params, "_flush", [], [], [], []).
+    erls_resource:post(Params, <<"_flush">>, [], [], [], []).
 
 refresh_index(Index) ->
     refresh_index(#erls_params{}, Index).
 
-refresh_index(Params, Index=[H|_T]) when not is_list(H) ->
-    refresh_index(Params, [Index]);
 refresh_index(Params, Index) ->
-    erls_resource:post(Params, filename:join([erls_utils:comma_separate(Index), "_refresh"]), [], [], [], []).
+    erls_resource:post(Params, filename:join([commas(Index), <<"_refresh">>]), [], [], [], []).
 
 refresh_all() ->
     refresh_all(#erls_params{}).
 
 refresh_all(Params) ->
-    erls_resource:post(Params, "_refresh", [], [], [], []).
+    erls_resource:post(Params, <<"_refresh">>, [], [], [], []).
 
 delete_doc(Index, Type, Id) ->
     delete_doc(#erls_params{}, Index, Type, Id).
@@ -208,13 +182,21 @@ delete_doc_by_query(Index, Type, Query) ->
     delete_doc_by_query(#erls_params{}, Index, Type, Query).
 
 delete_doc_by_query(Params, Index, Type, Query) ->
-    erls_resource:delete(Params, filename:join([Index, Type]), [], [{"q", Query}], []).
+    erls_resource:delete(Params, filename:join([Index, Type]), [], [{<<"q">>, Query}], []).
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
 
-optimize_index(Params, Index=[H|_T]) when not is_list(H)->
-    optimize_index(Params, [Index]);
 optimize_index(Params, Index) ->
-    erls_resource:post(Params, filename:join([erls_utils:comma_separate(Index), "_optimize"]), [], [], [], []).
+    erls_resource:post(Params, filename:join([commas(Index), <<"_optimize">>]), [], [], [], []).
+
+%%% Internal functions
+
+-spec commas(list(binary()) | binary()) -> binary().
+commas(Bin) when is_binary(Bin) ->
+    Bin;
+commas([]) ->
+    <<>>;
+commas([H | T]) ->
+    << H/binary, << <<",", B/binary>> || B <- T >> >>.
 

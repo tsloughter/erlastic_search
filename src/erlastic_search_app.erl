@@ -8,22 +8,10 @@
 %%%-------------------------------------------------------------------
 -module(erlastic_search_app).
 
--behaviour(application).
+-export([start_deps/0]).
 
-%% Application callbacks
--export([start/0
-         ,start/2
-         ,stop/1]).
-
--define(APP, erlastic_search).
-
-%%%===================================================================
-%%% Application callbacks
-%%%===================================================================
-
-%%--------------------------------------------------------------------
-start() ->
-    start_deps(?APP, permanent).
+start_deps() ->
+    start_deps(erlastic_search, permanent).
 
 start_deps(App, Type) ->
     case application:start(App, Type) of
@@ -34,8 +22,3 @@ start_deps(App, Type) ->
             start_deps(App, Type)
     end.
 
-start(_StartType, _StartArgs) ->
-    ok.
-
-stop(_State) ->
-    ok.

@@ -2,9 +2,13 @@
 %% application.
 {application, erlastic_search, 
   [{description, "An Erlang app for communicating with Elastic Search's rest interface."},
-   {vsn, "0.2.0"},
+   {vsn, "0.3.0"},
    {modules, []},
    {registered,[]},
-   {applications, [kernel, stdlib, sasl, ssl, crypto, lhttpc]},
+   {applications, [kernel
+                  ,stdlib                  
+                  ,ssl
+                  ,hackney
+                  ,jsx]},
    {start_phases, []}]}.
 
