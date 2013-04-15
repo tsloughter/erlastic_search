@@ -100,7 +100,7 @@ index_doc_with_id(Index, Type, Id, Doc) when is_list(Doc) ->
 %% and passes to the server.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc_with_id(record(erls_params), binary(), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
+-spec index_doc_with_id(record(erls_params), binary(), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
 index_doc_with_id(Params, Index, Type, Id, Doc) when is_list(Doc) ->
     Json = jsx:encode(Doc),
     index_doc_with_id(Params, Index, Type, Id, Json);
@@ -120,12 +120,7 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
                                                                   {<<"_type">>, Type},
                                                                   {<<"_id">>, Id}
                                                                   ]}]}]),
-                             [
-                             Header,
-                             <<"\n">>,
-                             Json,
-                             <<"\n">>
-                             ]
+                             [Header, <<"\n">>, Json,<<"\n">>]
                      end, IndexTypeIdJsonTuples),
     erls_resource:post(Params, <<"/_bulk">>, [], [], Body, []).
 
