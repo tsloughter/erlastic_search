@@ -23,7 +23,7 @@ init_per_group(index_access, Config) ->
     erlastic_search_app:start_deps(),
 
     IndexName = create_random_name(<<"es_index_name_">>),
-    {ok, 200, _, _} = erlastic_search:create_index(IndexName),
+    {ok, _} = erlastic_search:create_index(IndexName),
 
     [{index_name, IndexName} | Config].
 
@@ -34,15 +34,15 @@ end_per_group(index_access, _Config) ->
 index_id(Config) ->
     IndexName = ?config(index_name, Config),
     Id = create_random_name(<<"es_id_">>),
-    {ok, 201, _, _} = erlastic_search:index_doc_with_id(IndexName, <<"type_1">>, Id, [{<<"hello">>, <<"there">>}]).
+    {ok, _} = erlastic_search:index_doc_with_id(IndexName, <<"type_1">>, Id, [{<<"hello">>, <<"there">>}]).
 
 index_no_id(Config) ->
     IndexName = ?config(index_name, Config),
-    {ok, 201, _, _} = erlastic_search:index_doc(IndexName, <<"type_1">>, [{<<"hello">>, <<"there">>}]).
+    {ok, _} = erlastic_search:index_doc(IndexName, <<"type_1">>, [{<<"hello">>, <<"there">>}]).
 
 search(Config) ->
     IndexName = ?config(index_name, Config),
-    {ok, 200, _, _} = erlastic_search:search(IndexName, <<"hello:there">>).
+    {ok, _} = erlastic_search:search(IndexName, <<"hello:there">>).
 
 %%%===================================================================
 %%% Helper Functions

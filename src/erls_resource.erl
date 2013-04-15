@@ -10,9 +10,14 @@
 %%%-------------------------------------------------------------------
 -module(erls_resource).
 
--export([get/5, get/6, head/5, delete/5, post/6, put/6]).
+-export([get/5
+        ,get/6
+        ,head/5
+        ,delete/5
+        ,post/6
+        ,put/6]).
 
--include_lib("erlastic_search/include/erlastic_search.hrl").
+-include("erlastic_search.hrl").
 
 get(State, Path, Headers, Params, Opts) ->
     request(State, get, Path, Headers, Params, [], Opts).
@@ -32,7 +37,6 @@ post(State, Path, Headers, Params, Body, Opts) ->
 put(State, Path, Headers, Params, Body, Opts) ->
     request(State, put, Path, Headers, Params, Body, Opts).
 
-
 request(State, Method, Path, Headers, Params, Body, Options) ->
     Path1 = <<Path/binary,
               (case Params of
@@ -51,13 +55,22 @@ request(State, Method, Path, Headers, Params, Body, Options) ->
              do_request(State, Method, Path1, Headers, <<>>, Options)
      end.
 
-
-do_request(#erls_params{host=Host, port=Port, ssl=Ssl, timeout=Timeout},
+do_request(#erls_params{host=Host, port=Port, timeout=Timeout},
            Method, Path, Headers, Body, Options) ->
-    hackney:request(Method, <<Host/binary, ":", (list_to_binary(integer_to_list(Port)))/binary,
-                              "/", Path/binary>>, Headers, Body,
-                    [{ssl, Ssl}, {recv_timeout, Timeout} | Options]).
-
+    case hackney:request(Method, <<Host/binary, ":", (list_to_binary(integer_to_list(Port)))/binary,
+                                   "/", Path/binary>>, Headers, Body,
+                         [{recv_timeout, Timeout} | Options]) of
+        {ok, Status, _Headers, Client} when Status =:= 200
+                                          ; Status =:= 201 ->
+            case hackney:body(Client) of
+                {ok, RespBody, _Client1} ->
+                    {ok, jsx:decode(RespBody)};
+                {error, _Reason} = Error ->
+                    Error
+            end;
+        {ok, Status, _Headers, _Client} ->
+            {error, Status}
+    end.
 
 encode_query(Props) ->
     P = fun({A,B}, AccIn) -> io_lib:format("~s=~s&", [A,B]) ++ AccIn end,

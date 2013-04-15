@@ -7,9 +7,37 @@
 %%% Created : 14 Feb 2010 by Tristan Sloughter <>
 %%%-------------------------------------------------------------------
 -module(erlastic_search).
--compile([export_all]).
 
--include_lib("erlastic_search/include/erlastic_search.hrl").
+-export([create_index/1
+        ,create_index/2
+        ,index_doc/3
+        ,index_doc/4
+        ,index_doc_with_id/4
+        ,index_doc_with_id/5
+        ,index_doc_with_id_opts/6
+        ,bulk_index_docs/2
+        ,search/2
+        ,search/3
+        ,search/5
+        ,search_limit/4
+        ,get_doc/3
+        ,get_doc/4
+        ,flush_index/1
+        ,flush_index/2
+        ,flush_all/0
+        ,flush_all/1
+        ,refresh_all/0
+        ,refresh_all/1
+        ,refresh_index/1
+        ,refresh_index/2
+        ,delete_doc/3
+        ,delete_doc/4
+        ,delete_doc_by_query/3
+        ,delete_doc_by_query/4
+        ,optimize_index/1
+        ,optimize_index/2]).
+
+-include("erlastic_search.hrl").
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -17,7 +45,7 @@
 %% Elastic Search, the default settings on localhost.
 %% @end
 %%--------------------------------------------------------------------
--spec create_index(binary()) -> {ok, tuple()} | {error, any()}.
+-spec create_index(binary()) -> {ok, list()} | {error, any()}.
 create_index(Index) ->
     create_index(#erls_params{}, Index).
 
@@ -27,7 +55,7 @@ create_index(Index) ->
 %% details to create and sends the request to Elastic Search.
 %% @end
 %%--------------------------------------------------------------------
--spec create_index(record(erls_params), binary()) -> {ok, tuple()} | {error, any()}.
+-spec create_index(record(erls_params), binary()) -> {ok, list()} | {error, any()}.
 create_index(Params, Index) ->
     erls_resource:put(Params, Index, [], [], [], []).
 
@@ -38,7 +66,7 @@ create_index(Params, Index) ->
 %% default server. Elastic Search provides the doc with an id.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc(binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+-spec index_doc(binary(), binary(), list()) -> {ok, list()} | {error, any()}.
 index_doc(Index, Type, Doc) ->
     index_doc(#erls_params{}, Index, Type, Doc).
 
@@ -49,7 +77,7 @@ index_doc(Index, Type, Doc) ->
 %% server. Elastic Search provides the doc with an id.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc(record(erls_params), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+-spec index_doc(record(erls_params), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
 index_doc(Params, Index, Type, Doc) when is_list(Doc) ->
     Json = jsx:encode(Doc),
     erls_resource:post(Params, filename:join(Index, Type), [], [], Json, []).
@@ -61,7 +89,7 @@ index_doc(Params, Index, Type, Doc) when is_list(Doc) ->
 %% and passes to the default server.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc_with_id(binary(), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+-spec index_doc_with_id(binary(), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
 index_doc_with_id(Index, Type, Id, Doc) when is_list(Doc) ->
     index_doc_with_id(#erls_params{}, Index, Type, Id, Doc).
 
@@ -72,14 +100,14 @@ index_doc_with_id(Index, Type, Id, Doc) when is_list(Doc) ->
 %% and passes to the server.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc_with_id(record(erls_params), binary(), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+-spec index_doc_with_id(record(erls_params), binary(), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
 index_doc_with_id(Params, Index, Type, Id, Doc) when is_list(Doc) ->
     Json = jsx:encode(Doc),
     index_doc_with_id(Params, Index, Type, Id, Json);
 index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
     index_doc_with_id_opts(Params, Index, Type, Id, Json, []).
 
--spec index_doc_with_id_opts(record(erls_params), binary(), binary(), binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+-spec index_doc_with_id_opts(record(erls_params), binary(), binary(), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
 index_doc_with_id_opts(Params, Index, Type, Id, Json, Opts) when is_binary(Json), is_list(Opts) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Json, []).
 
@@ -108,21 +136,21 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
 %% it to the Elastic Search server specified in Params.
 %% @end
 %%--------------------------------------------------------------------
--spec search(binary() | list(), binary()) -> {ok, tuple()} | {error, any()}.
+-spec search(binary() | list(), binary()) -> {ok, list()} | {error, any()}.
 search(Index, Query) ->
     search(#erls_params{}, Index, <<>>, Query, []).
 
--spec search(binary() | list() | record(erls_params), binary() | list(), binary()) -> {ok, tuple()} | {error, any()}.
+-spec search(binary() | list() | record(erls_params), binary() | list(), binary()) -> {ok, list()} | {error, any()}.
 search(Params, Index, Query) when is_record(Params, erls_params) ->
     search(Params, Index, <<>>, Query, []);
 search(Index, Type, Query) ->
     search(#erls_params{}, Index, Type, Query, []). 
 
--spec search_limit(binary() | list(), binary(), binary(), integer()) -> {ok, tuple()} | {error, any()}.
+-spec search_limit(binary() | list(), binary(), binary(), integer()) -> {ok, list()} | {error, any()}.
 search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
     search(#erls_params{}, Index, Type, Query, [{<<"size">>, integer_to_list(Limit)}]).
 
--spec search(record(erls_params), list() | binary(), list() | binary(), binary(), list()) -> {ok, tuple()} | {error, any()}.
+-spec search(record(erls_params), list() | binary(), list() | binary(), binary(), list()) -> {ok, list()} | {error, any()}.
 search(Params, Index, Type, Query, Opts) ->
     erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, []).
 
@@ -132,7 +160,7 @@ search(Params, Index, Type, Query, Opts) ->
 %% it to the default Elastic Search server on localhost:9100
 %% @end
 %%--------------------------------------------------------------------
--spec get_doc(binary(), binary(), binary()) -> {ok, tuple()} | {error, any()}.
+-spec get_doc(binary(), binary(), binary()) -> {ok, list()} | {error, any()}.
 get_doc(Index, Type, Id) ->
     get_doc(#erls_params{}, Index, Type, Id).
 
@@ -144,7 +172,7 @@ get_doc(Index, Type, Id) ->
 %% @spec
 %% @end
 %%--------------------------------------------------------------------
--spec get_doc(record(erls_params), binary(), binary(), binary()) -> {ok, tuple()} | {error, any()}.
+-spec get_doc(record(erls_params), binary(), binary(), binary()) -> {ok, list()} | {error, any()}.
 get_doc(Params, Index, Type, Id) ->
     erls_resource:get(Params, filename:join([Index, Type, Id]), [], [], []).
 
