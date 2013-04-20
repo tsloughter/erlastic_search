@@ -58,3 +58,18 @@ Eshell V5.10.1  (abort with ^G)
           {<<"_score">>,0.30685282},
           {<<"_source">>,[{<<"key1">>,<<"value1">>}]}]]}]}]}
 ```
+
+Testing
+-------
+
+First start a local ElasticSearch:
+
+```bash
+$ bin/elasticsearch -f
+```
+
+Run Common Test:
+
+```bash
+$ make ct
+```
