@@ -5,6 +5,7 @@
         ,init_per_group/2
         ,end_per_group/2]).
 -export([index_id/1
+        ,index_encoded_id/1
         ,index_no_id/1
         ,search/1]).
 
@@ -16,6 +17,7 @@ all() ->
 
 groups() ->
     [{index_access, [], [index_id
+                        ,index_encoded_id
                         ,index_no_id
                         ,search]}].
 
@@ -35,6 +37,11 @@ index_id(Config) ->
     IndexName = ?config(index_name, Config),
     Id = create_random_name(<<"es_id_">>),
     {ok, _} = erlastic_search:index_doc_with_id(IndexName, <<"type_1">>, Id, [{<<"hello">>, <<"there">>}]).
+
+index_encoded_id(Config) ->
+    IndexName = ?config(index_name, Config),
+    Id = create_random_name(<<"es_id_">>),
+    {ok, _} = erlastic_search:index_doc_with_id(IndexName, <<"type_1">>, Id, jsx:encode([{<<"hello">>, <<"there">>}])).
 
 index_no_id(Config) ->
     IndexName = ?config(index_name, Config),

@@ -66,21 +66,15 @@ create_index(Params, Index) ->
 %% default server. Elastic Search provides the doc with an id.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc(binary(), binary(), list()) -> {ok, list()} | {error, any()}.
+-spec index_doc(binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
 index_doc(Index, Type, Doc) ->
     index_doc(#erls_params{}, Index, Type, Doc).
 
-%%--------------------------------------------------------------------
-%% @doc
-%% Takes the index and type name and a Json document described in
-%% Erlang terms, converts the document to a string and passes to the
-%% server. Elastic Search provides the doc with an id.
-%% @end
-%%--------------------------------------------------------------------
--spec index_doc(record(erls_params), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
+-spec index_doc(record(erls_params), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
 index_doc(Params, Index, Type, Doc) when is_list(Doc) ->
-    Json = jsx:encode(Doc),
-    erls_resource:post(Params, filename:join(Index, Type), [], [], Json, []).
+    index_doc(Params, Index, Type, jsx:encode(Doc));
+index_doc(Params, Index, Type, Doc) when is_binary(Doc) ->
+    erls_resource:post(Params, filename:join(Index, Type), [], [], Doc, []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -89,38 +83,39 @@ index_doc(Params, Index, Type, Doc) when is_list(Doc) ->
 %% and passes to the default server.
 %% @end
 %%--------------------------------------------------------------------
--spec index_doc_with_id(binary(), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
-index_doc_with_id(Index, Type, Id, Doc) when is_list(Doc) ->
-    index_doc_with_id(#erls_params{}, Index, Type, Id, Doc).
+-spec index_doc_with_id(binary(), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
+index_doc_with_id(Index, Type, Id, Doc) ->
+    index_doc_with_id_opts(#erls_params{}, Index, Type, Id, Doc, []).
 
-%%--------------------------------------------------------------------
-%% @doc
-%% Takes the index and type name and a Json document described in
-%% Erlang terms, converts the document to a string after adding the _id field
-%% and passes to the server.
-%% @end
-%%--------------------------------------------------------------------
 -spec index_doc_with_id(record(erls_params), binary(), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
-index_doc_with_id(Params, Index, Type, Id, Doc) when is_list(Doc) ->
-    Json = jsx:encode(Doc),
-    index_doc_with_id(Params, Index, Type, Id, Json);
-index_doc_with_id(Params, Index, Type, Id, Json) when is_binary(Json) ->
-    index_doc_with_id_opts(Params, Index, Type, Id, Json, []).
+index_doc_with_id(Params, Index, Type, Id, Doc) ->
+    index_doc_with_id_opts(Params, Index, Type, Id, Doc, []).
 
--spec index_doc_with_id_opts(record(erls_params), binary(), binary(), binary(), binary(), list()) -> {ok, list()} | {error, any()}.
-index_doc_with_id_opts(Params, Index, Type, Id, Json, Opts) when is_binary(Json), is_list(Opts) ->
-    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Json, []).
+-spec index_doc_with_id_opts(record(erls_params), binary(), binary(), binary(), list() | binary(), list()) -> {ok, list()} | {error, any()}.
+index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Doc), is_list(Opts) ->
+    index_doc_with_id_opts(Params, Index, Type, Id, jsx:encode(Doc), []);
+index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_binary(Doc), is_list(Opts) ->
+    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Doc, []).
 
 %% Documents is [ {Index, Type, Id, Json}, ... ]
+-spec bulk_index_docs(record(erls_params), list()) -> {ok, list()} | {error, any()}.
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
-    Body = lists:map(fun({Index, Type, Id, Json}) ->
+    Body = lists:map(fun({Index, Type, Id, Doc}) when is_binary(Doc) ->
                              Header = jsx:encode([
                                                   {<<"index">>, [{[
                                                                   {<<"_index">>, Index},
                                                                   {<<"_type">>, Type},
                                                                   {<<"_id">>, Id}
                                                                   ]}]}]),
-                             [Header, <<"\n">>, Json,<<"\n">>]
+                             [Header, <<"\n">>, Doc, <<"\n">>];
+                        ({Index, Type, Id, Doc}) when is_list(Doc) ->
+                             Header = jsx:encode([
+                                                 {<<"index">>, [{[
+                                                                 {<<"_index">>, Index},
+                                                                 {<<"_type">>, Type},
+                                                                 {<<"_id">>, Id}
+                                                                 ]}]}]),
+                             [Header, <<"\n">>, jsx:encode(Doc), <<"\n">>]
                      end, IndexTypeIdJsonTuples),
     erls_resource:post(Params, <<"/_bulk">>, [], [], Body, []).
 
