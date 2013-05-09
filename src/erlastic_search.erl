@@ -126,23 +126,25 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
 %% it to the Elastic Search server specified in Params.
 %% @end
 %%--------------------------------------------------------------------
--spec search(binary() | list(), binary()) -> {ok, list()} | {error, any()}.
+-spec search(binary() | list(), list() | binary()) -> {ok, list()} | {error, any()}.
 search(Index, Query) ->
     search(#erls_params{}, Index, <<>>, Query, []).
 
--spec search(binary() | list() | record(erls_params), binary() | list(), binary()) -> {ok, list()} | {error, any()}.
+-spec search(binary() | list() | record(erls_params), binary() | list(), list() | binary()) -> {ok, list()} | {error, any()}.
 search(Params, Index, Query) when is_record(Params, erls_params) ->
     search(Params, Index, <<>>, Query, []);
 search(Index, Type, Query) ->
     search(#erls_params{}, Index, Type, Query, []). 
 
--spec search_limit(binary() | list(), binary(), binary(), integer()) -> {ok, list()} | {error, any()}.
+-spec search_limit(binary() | list(), binary(), list() | binary(), integer()) -> {ok, list()} | {error, any()}.
 search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
     search(#erls_params{}, Index, Type, Query, [{<<"size">>, integer_to_list(Limit)}]).
 
--spec search(record(erls_params), list() | binary(), list() | binary(), binary(), list()) -> {ok, list()} | {error, any()}.
+-spec search(record(erls_params), list() | binary(), list() | binary(), list() | binary(), list()) -> {ok, list()} | {error, any()}.
+search(Params, Index, Type, Query, Opts) when is_binary(Query) ->
+    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, []);
 search(Params, Index, Type, Query, Opts) ->
-    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, []).
+    erls_resource:post(Params, filename:join([commas(Index), Type, <<"_search">>]), [], Opts, jsx:encode(Query), []).
 
 %%--------------------------------------------------------------------
 %% @doc
