@@ -110,14 +110,14 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
                              [Header, <<"\n">>, Doc, <<"\n">>];
                         ({Index, Type, Id, Doc}) when is_list(Doc) ->
                              Header = jsx:encode([
-                                                 {<<"index">>, [{[
+                                                 {<<"index">>, [
                                                                  {<<"_index">>, Index},
                                                                  {<<"_type">>, Type},
                                                                  {<<"_id">>, Id}
-                                                                 ]}]}]),
+                                                                 ]}]),
                              [Header, <<"\n">>, jsx:encode(Doc), <<"\n">>]
                      end, IndexTypeIdJsonTuples),
-    erls_resource:post(Params, <<"/_bulk">>, [], [], Body, []).
+    erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), []).
 
 
 %%--------------------------------------------------------------------
