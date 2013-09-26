@@ -55,11 +55,11 @@ request(State, Method, Path, Headers, Params, Body, Options) ->
              do_request(State, Method, Path1, Headers, <<>>, Options)
      end.
 
-do_request(#erls_params{host=Host, port=Port, timeout=Timeout},
+do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout},
            Method, Path, Headers, Body, Options) ->
     case hackney:request(Method, <<Host/binary, ":", (list_to_binary(integer_to_list(Port)))/binary,
                                    "/", Path/binary>>, Headers, Body,
-                         [{recv_timeout, Timeout} | Options]) of
+                         [{recv_timeout, Timeout}, {connect_timeout, CTimeout} | Options]) of
         {ok, Status, _Headers, Client} when Status =:= 200
                                           ; Status =:= 201 ->
             case hackney:body(Client) of
