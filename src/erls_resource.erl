@@ -57,9 +57,21 @@ request(State, Method, Path, Headers, Params, Body, Options) ->
 
 do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout},
            Method, Path, Headers, Body, Options) ->
+    % Ugly, but to keep backwards compatibility: add recv_timeout and
+    % connect_timeout when *not* present in Options.
+    NewOptions = lists:foldl(
+        fun({BCOpt, Value}, Acc) ->
+            case proplists:get_value(BCOpt, Acc) of
+                undefined -> [{BCOpt, Value}|Acc];
+                _ -> Acc
+            end
+        end,
+        Options,
+        [{recv_timeout, Timeout}, {connect_timeout, CTimeout}]
+    ),
     case hackney:request(Method, <<Host/binary, ":", (list_to_binary(integer_to_list(Port)))/binary,
                                    "/", Path/binary>>, Headers, Body,
-                         [{recv_timeout, Timeout}, {connect_timeout, CTimeout} | Options]) of
+                         NewOptions) of
         {ok, Status, _Headers, Client} when Status =:= 200
                                           ; Status =:= 201 ->
             case hackney:body(Client) of
