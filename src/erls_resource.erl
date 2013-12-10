@@ -81,7 +81,9 @@ do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout
                     Error
             end;
         {ok, Status, _Headers, _Client} ->
-            {error, Status}
+            {error, Status};
+        {error, R} ->
+            {error, R}
     end.
 
 encode_query(Props) ->
