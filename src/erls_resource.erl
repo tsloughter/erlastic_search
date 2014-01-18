@@ -14,6 +14,7 @@
         ,get/6
         ,head/5
         ,delete/5
+        ,delete/6
         ,post/6
         ,put/6]).
 
@@ -31,6 +32,9 @@ head(State, Path, Headers, Params, Opts) ->
 delete(State, Path, Headers, Params, Opts) ->
     request(State, delete, Path, Headers, Params, [], Opts).
 
+delete(State, Path, Headers, Params, Body, Opts) ->
+    request(State, delete, Path, Headers, Params, Body, Opts).
+
 post(State, Path, Headers, Params, Body, Opts) ->
     request(State, post, Path, Headers, Params, Body, Opts).
 
@@ -43,17 +47,8 @@ request(State, Method, Path, Headers, Params, Body, Options) ->
                   [] -> <<>>;
                   Props -> <<"?", (encode_query(Props))/binary>>
               end)/binary>>,
-     case has_body(Method) of
-         true ->
-             case make_body(Body, Headers, Options) of
-                 {Headers2, Options1, Body} ->
-                     do_request(State, Method, Path1, Headers2, Body, Options1);
-                 Error ->
-                     Error
-                end;
-         false ->
-             do_request(State, Method, Path1, Headers, <<>>, Options)
-     end.
+    {Headers2, Options1, Body} = make_body(Body, Headers, Options),
+    do_request(State, Method, Path1, Headers2, Body, Options1).
 
 do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout},
            Method, Path, Headers, Body, Options) ->
@@ -96,20 +91,9 @@ default_header(K, V, H) ->
         false -> [{K, V}|H]
     end.
 
-has_body(head) ->
-    false;
-has_body(delete) ->
-    false;
-has_body(_) ->
-    true.
-
 default_content_length(B, H) ->
     default_header(<<"Content-Length">>, list_to_binary(integer_to_list(erlang:iolist_size(B))), H).
 
-make_body(Body, Headers, Options) when is_list(Body) ->
-    {default_content_length(Body, Headers), Options, Body};
-make_body(Body, Headers, Options) when is_binary(Body) ->
-    {default_content_length(Body, Headers), Options, Body};
-make_body(_, _, _) ->
-    {error, <<"body invalid">>}.
+make_body(Body, Headers, Options) ->
+    {default_content_length(Body, Headers), Options, Body}.
 
