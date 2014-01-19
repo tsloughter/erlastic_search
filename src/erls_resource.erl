@@ -80,8 +80,11 @@ do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout
                 {error, _Reason} = Error ->
                     Error
             end;
-        {ok, Status, _Headers, _Client} ->
-            {error, Status};
+        {ok, Status, _Headers, Client} ->
+            case hackney:body(Client) of
+                {ok, RespBody, _Client1} -> {error, {Status, jsx:decode(RespBody)}};
+                {error, _Reason} -> {error, Status}
+            end;
         {error, R} ->
             {error, R}
     end.
