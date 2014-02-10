@@ -37,7 +37,11 @@
         ,delete_doc_by_query_doc/3
         ,delete_doc_by_query_doc/4
         ,optimize_index/1
-        ,optimize_index/2]).
+        ,optimize_index/2
+        ,percolator_add/3
+        ,percolator_add/4
+        ,percolate/3
+        ,percolate/4]).
 
 -include("erlastic_search.hrl").
 
@@ -220,6 +224,18 @@ optimize_index(Index) ->
 
 optimize_index(Params, Index) ->
     erls_resource:post(Params, filename:join([commas(Index), <<"_optimize">>]), [], [], [], Params#erls_params.http_client_options).
+
+percolator_add(Index, Name, Query) ->
+    percolator_add(#erls_params{}, Index, Name, Query).
+
+percolator_add(Params, Index, Name, Query) ->
+    erls_resource:put(Params, filename:join([<<"_percolator">>, commas(Index), Name]), [], [], jsx:encode(Query), Params#erls_params.http_client_options).
+
+percolate(Index, Type, Doc) ->
+    percolate(#erls_params{}, Index, Type, Doc).
+
+percolate(Params, Index, Type, Doc) ->
+    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_percolate">>]), [], [], jsx:encode(Doc), Params#erls_params.http_client_options).
 
 %%% Internal functions
 
