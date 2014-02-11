@@ -40,6 +40,8 @@
         ,optimize_index/2
         ,percolator_add/3
         ,percolator_add/4
+        ,percolator_del/2
+        ,percolator_del/3
         ,percolate/3
         ,percolate/4]).
 
@@ -230,6 +232,12 @@ percolator_add(Index, Name, Query) ->
 
 percolator_add(Params, Index, Name, Query) ->
     erls_resource:put(Params, filename:join([<<"_percolator">>, commas(Index), Name]), [], [], jsx:encode(Query), Params#erls_params.http_client_options).
+
+percolator_del(Index, Name) ->
+    percolator_del(#erls_params{}, Index, Name).
+
+percolator_del(Params, Index, Name) ->
+    erls_resource:delete(Params, filename:join([<<"_percolator">>, commas(Index), Name]), [], [], [], Params#erls_params.http_client_options).
 
 percolate(Index, Type, Doc) ->
     percolate(#erls_params{}, Index, Type, Doc).
