@@ -15,6 +15,9 @@
         ,index_doc_with_id/4
         ,index_doc_with_id/5
         ,index_doc_with_id_opts/6
+        ,upsert_doc/4
+        ,upsert_doc/5
+        ,upsert_doc_opts/6
         ,bulk_index_docs/2
         ,search/2
         ,search/3
@@ -104,6 +107,26 @@ index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Doc), is
     index_doc_with_id_opts(Params, Index, Type, Id, jsx:encode(Doc), []);
 index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_binary(Doc), is_list(Opts) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Doc, Params#erls_params.http_client_options).
+
+
+%%--------------------------------------------------------------------
+%% @doc Insert the document, or replacing it when it already exists (upsert)
+%% (http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-update.html)
+%% --------------------------------------------------------------------
+
+-spec upsert_doc(binary(), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
+upsert_doc(Index, Type, Id, Doc) ->
+    upsert_doc_opts(#erls_params{}, Index, Type, Id, Doc, []).
+
+-spec upsert_doc(record(erls_params), binary(), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
+upsert_doc(Params, Index, Type, Id, Doc) ->
+    upsert_doc_opts(Params, Index, Type, Id, Doc, []).
+
+-spec upsert_doc_opts(record(erls_params), binary(), binary(), binary(), list(), list()) -> {ok, list()} | {error, any()}.
+upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Doc), is_list(Opts) ->
+    erls_resource:post(Params, filename:join([Index, Type, Id, "_update"]), [], Opts,
+                       jsx:encode([{<<"doc">>, Doc}, {<<"doc_as_upsert">>, true}]),
+                       Params#erls_params.http_client_options).
 
 %% Documents is [ {Index, Type, Id, Json}, ... ]
 -spec bulk_index_docs(record(erls_params), list()) -> {ok, list()} | {error, any()}.
