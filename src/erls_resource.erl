@@ -70,7 +70,7 @@ do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout
         {ok, Status, _Headers, Client} when Status =:= 200
                                           ; Status =:= 201 ->
             case hackney:body(Client) of
-                {ok, RespBody, _Client1} ->
+                {ok, RespBody} ->
                     {ok, jsx:decode(RespBody)};
                 {error, _Reason} = Error ->
                     Error
@@ -99,4 +99,5 @@ default_content_length(B, H) ->
 
 make_body(Body, Headers, Options) ->
     {default_content_length(Body, Headers), Options, Body}.
+
 
