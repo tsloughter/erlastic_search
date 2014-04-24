@@ -77,7 +77,7 @@ do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout
             end;
         {ok, Status, _Headers, Client} ->
             case hackney:body(Client) of
-                {ok, RespBody, _Client1} -> {error, {Status, jsx:decode(RespBody)}};
+                {ok, RespBody} -> {error, {Status, jsx:decode(RespBody)}};
                 {error, _Reason} -> {error, Status}
             end;
         {error, R} ->
