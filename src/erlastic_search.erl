@@ -10,6 +10,9 @@
 
 -export([create_index/1
         ,create_index/2
+        ,stats_index/0
+        ,stats_index/1
+        ,stats_index/2
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_id/4
@@ -69,6 +72,25 @@ create_index(Index) ->
 -spec create_index(record(erls_params), binary()) -> {ok, list()} | {error, any()}.
 create_index(Params, Index) ->
     erls_resource:put(Params, Index, [], [], [], Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Takes an optional list of index names and the record describing the servers
+%% details to read the stats for these index.
+%% If no index in supplied then stats for all indices are returned.
+%% http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-stats.html#indices-stats
+%% @end
+%%--------------------------------------------------------------------
+
+stats_index() ->
+    stats_index(#erls_params{}).
+
+stats_index(Params) ->
+    stats_index(Params, []).
+
+stats_index(Params, Index) ->
+    erls_resource:get(Params, filename:join(commas(Index),"_stats"), [], [],
+                      Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
