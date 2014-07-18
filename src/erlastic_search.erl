@@ -44,6 +44,8 @@
         ,delete_doc_by_query/4
         ,delete_doc_by_query_doc/3
         ,delete_doc_by_query_doc/4
+        ,delete_index/1
+        ,delete_index/2
         ,optimize_index/1
         ,optimize_index/2
         ,percolator_add/3
@@ -278,6 +280,18 @@ delete_doc_by_query_doc(Params, Index, any, Doc) ->
 
 delete_doc_by_query_doc(Params, Index, Type, Doc) ->
     erls_resource:delete(Params, filename:join([Index, Type, <<"_query">>]), [], [], jsx:encode(Doc), Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Delete existing index
+%% @end
+%%--------------------------------------------------------------------
+delete_index(Index) ->
+    delete_index(#erls_params{}, Index).
+
+delete_index(Params, Index) ->
+    erls_resource:delete(Params, Index, [], [], [],
+                         Params#erls_params.http_client_options).
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
