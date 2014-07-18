@@ -228,8 +228,6 @@ get_doc(Index, Type, Id) ->
 %% @doc
 %% Takes the index and type name and a doc id and sends
 %% it to the Elastic Search server specified in Params.
-%%
-%% @spec
 %% @end
 %%--------------------------------------------------------------------
 -spec get_doc(record(erls_params), binary(), binary(), binary()) -> {ok, list()} | {error, any()}.
