@@ -13,6 +13,8 @@
         ,stats_index/0
         ,stats_index/1
         ,stats_index/2
+        ,put_mapping/3
+        ,put_mapping/4
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_id/4
@@ -91,6 +93,19 @@ stats_index(Params) ->
 stats_index(Params, Index) ->
     erls_resource:get(Params, filename:join(commas(Index),"_stats"), [], [],
                       Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Insert a mapping into an ElasticSearch index
+%% @end
+%%--------------------------------------------------------------------
+-spec put_mapping(binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
+put_mapping(Index, Type, Doc) ->
+    put_mapping(#erls_params{}, Index, Type, Doc).
+
+-spec put_mapping(record(erls_params), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
+put_mapping(Params, Index, Type, Doc) -> 
+    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], jsx:encode(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
