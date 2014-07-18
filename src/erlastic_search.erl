@@ -10,6 +10,9 @@
 
 -export([create_index/1
         ,create_index/2
+        ,stats_index/0
+        ,stats_index/1
+        ,stats_index/2
         ,put_mapping/3
         ,put_mapping/4
         ,index_doc/3
@@ -41,6 +44,8 @@
         ,delete_doc_by_query/4
         ,delete_doc_by_query_doc/3
         ,delete_doc_by_query_doc/4
+        ,delete_index/1
+        ,delete_index/2
         ,optimize_index/1
         ,optimize_index/2
         ,percolator_add/3
@@ -71,6 +76,25 @@ create_index(Index) ->
 -spec create_index(record(erls_params), binary()) -> {ok, list()} | {error, any()}.
 create_index(Params, Index) ->
     erls_resource:put(Params, Index, [], [], [], Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Takes an optional list of index names and the record describing the servers
+%% details to read the stats for these index.
+%% If no index in supplied then stats for all indices are returned.
+%% http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-stats.html#indices-stats
+%% @end
+%%--------------------------------------------------------------------
+
+stats_index() ->
+    stats_index(#erls_params{}).
+
+stats_index(Params) ->
+    stats_index(Params, []).
+
+stats_index(Params, Index) ->
+    erls_resource:get(Params, filename:join(commas(Index),"_stats"), [], [],
+                      Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -206,8 +230,6 @@ get_doc(Index, Type, Id) ->
 %% @doc
 %% Takes the index and type name and a doc id and sends
 %% it to the Elastic Search server specified in Params.
-%%
-%% @spec
 %% @end
 %%--------------------------------------------------------------------
 -spec get_doc(record(erls_params), binary(), binary(), binary()) -> {ok, list()} | {error, any()}.
@@ -258,6 +280,18 @@ delete_doc_by_query_doc(Params, Index, any, Doc) ->
 
 delete_doc_by_query_doc(Params, Index, Type, Doc) ->
     erls_resource:delete(Params, filename:join([Index, Type, <<"_query">>]), [], [], jsx:encode(Doc), Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Delete existing index
+%% @end
+%%--------------------------------------------------------------------
+delete_index(Index) ->
+    delete_index(#erls_params{}, Index).
+
+delete_index(Params, Index) ->
+    erls_resource:delete(Params, Index, [], [], [],
+                         Params#erls_params.http_client_options).
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
