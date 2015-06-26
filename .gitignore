@@ -1,3 +1,5 @@
+.rebar
+_build
 .eunit
 deps
 priv

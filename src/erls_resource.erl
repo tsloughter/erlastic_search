@@ -99,5 +99,3 @@ default_content_length(B, H) ->
 
 make_body(Body, Headers, Options) ->
     {default_content_length(Body, Headers), Options, Body}.
-
-

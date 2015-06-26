@@ -55,14 +55,6 @@ search(Config) ->
 %%% Helper Functions
 %%%===================================================================
 
-compare_json(J1, J2) ->
-    sort(jsx:decode(J1)) == sort(jsx:decode(J2)).
-
-sort(L = [X | _]) when is_list(X) ->
-    [sort(Y) || Y <- L];
-sort(L = [X | _]) when is_tuple(X)->
-    lists:keysort(1, L).
-
 create_random_name(Name) ->
-    random:seed(erlang:now()),
+    random:seed(os:timestamp()),
     <<Name/binary, (list_to_binary(erlang:integer_to_list(random:uniform(1000000))))/binary>>.

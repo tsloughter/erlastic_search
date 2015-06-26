@@ -7,10 +7,7 @@ Build and Run
 -------------
 
 ```shell
-$ make
-
-$ make shell
-./rebar compile
+$ ./rebar3 shell
 ==> mimetypes (compile)
 ==> hackney (compile)
 ==> jsx (compile)
@@ -71,5 +68,5 @@ $ bin/elasticsearch -f
 Run Common Test:
 
 ```bash
-$ make ct
+$ ./rebar3 ct
 ```
