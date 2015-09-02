@@ -1,7 +1,7 @@
 ErlasticSearch
 ======================================
 
-An Erlang client for [ElasticSearch](http://www.elasticsearch.org/).
+An Erlang client for [Elasticsearch](https://www.elastic.co/products/elasticsearch).
 
 Build and Run
 -------------
@@ -59,7 +59,7 @@ Eshell V5.10.1  (abort with ^G)
 Testing
 -------
 
-First start a local ElasticSearch:
+First start a local Elasticsearch:
 
 ```bash
 $ bin/elasticsearch -f
