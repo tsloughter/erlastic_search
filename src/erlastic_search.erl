@@ -60,7 +60,7 @@
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the name of an index to create and sends the request to
-%% Elastic Search, the default settings on localhost.
+%% Elasticsearch, the default settings on localhost.
 %% @end
 %%--------------------------------------------------------------------
 -spec create_index(binary()) -> {ok, list()} | {error, any()}.
@@ -70,7 +70,7 @@ create_index(Index) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the name of an index and the record describing the servers
-%% details to create and sends the request to Elastic Search.
+%% details to create and sends the request to Elasticsearch.
 %% @end
 %%--------------------------------------------------------------------
 -spec create_index(#erls_params{}, binary()) -> {ok, list()} | {error, any()}.
@@ -82,7 +82,7 @@ create_index(Params, Index) ->
 %% Takes an optional list of index names and the record describing the servers
 %% details to read the stats for these index.
 %% If no index in supplied then stats for all indices are returned.
-%% http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-stats.html#indices-stats
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-stats.html
 %% @end
 %%--------------------------------------------------------------------
 
@@ -98,7 +98,7 @@ stats_index(Params, Index) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Insert a mapping into an ElasticSearch index
+%% Insert a mapping into an Elasticsearch index
 %% @end
 %%--------------------------------------------------------------------
 -spec put_mapping(binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
@@ -113,7 +113,7 @@ put_mapping(Params, Index, Type, Doc) ->
 %% @doc
 %% Takes the index and type name and a Json document described in
 %% Erlang terms, converts the document to a string and passes to the
-%% default server. Elastic Search provides the doc with an id.
+%% default server. Elasticsearch provides the doc with an id.
 %% @end
 %%--------------------------------------------------------------------
 -spec index_doc(binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
@@ -150,7 +150,7 @@ index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_binary(Doc), 
 
 %%--------------------------------------------------------------------
 %% @doc Insert the document, or replacing it when it already exists (upsert)
-%% (http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-update.html)
+%% (https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html)
 %% --------------------------------------------------------------------
 
 -spec upsert_doc(binary(), binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
@@ -193,7 +193,7 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a query as "key:value" and sends
-%% it to the Elastic Search server specified in Params.
+%% it to the Elasticsearch server specified in Params.
 %% @end
 %%--------------------------------------------------------------------
 -spec search(binary() | list(), list() | binary()) -> {ok, list()} | {error, any()}.
@@ -219,7 +219,7 @@ search(Params, Index, Type, Query, Opts) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a doc id and sends
-%% it to the default Elastic Search server on localhost:9100
+%% it to the default Elasticsearch server on localhost:9100
 %% @end
 %%--------------------------------------------------------------------
 -spec get_doc(binary(), binary(), binary()) -> {ok, list()} | {error, any()}.
@@ -229,7 +229,7 @@ get_doc(Index, Type, Id) ->
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a doc id and sends
-%% it to the Elastic Search server specified in Params.
+%% it to the Elasticsearch server specified in Params.
 %% @end
 %%--------------------------------------------------------------------
 -spec get_doc(#erls_params{}, binary(), binary(), binary()) -> {ok, list()} | {error, any()}.
