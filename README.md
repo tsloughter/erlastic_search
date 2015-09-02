@@ -62,7 +62,7 @@ Testing
 First start a local Elasticsearch:
 
 ```bash
-$ bin/elasticsearch -f
+$ bin/elasticsearch
 ```
 
 Run Common Test:
