@@ -143,7 +143,7 @@ index_doc_with_id(Params, Index, Type, Id, Doc) ->
 
 -spec index_doc_with_id_opts(#erls_params{}, binary(), binary(), binary(), list() | binary(), list()) -> {ok, list()} | {error, any()}.
 index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Doc), is_list(Opts) ->
-    index_doc_with_id_opts(Params, Index, Type, Id, jsx:encode(Doc), []);
+    index_doc_with_id_opts(Params, Index, Type, Id, jsx:encode(Doc), Opts);
 index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_binary(Doc), is_list(Opts) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Doc, Params#erls_params.http_client_options).
 
