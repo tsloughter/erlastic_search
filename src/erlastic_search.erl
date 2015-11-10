@@ -13,6 +13,9 @@
         ,stats_index/0
         ,stats_index/1
         ,stats_index/2
+        ,nodes_info/0
+        ,nodes_info/1
+        ,nodes_info/2
         ,put_mapping/3
         ,put_mapping/4
         ,index_doc/3
@@ -94,6 +97,28 @@ stats_index(Params) ->
 
 stats_index(Params, Index) ->
     erls_resource:get(Params, filename:join(commas(Index),"_stats"), [], [],
+                      Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Takes an optional list of node names and the record describing the servers
+%% details to read the infos for these nodes.
+%% If no index in supplied then stats for all indices are returned.
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-info.html
+%% @end
+%%--------------------------------------------------------------------
+
+-spec nodes_info() -> {ok, list()} | {error, any()}.
+nodes_info() ->
+    nodes_info(#erls_params{}).
+
+-spec nodes_info(#erls_params{}) -> {ok, list()} | {error, any()}.
+nodes_info(#erls_params{} = Params) ->
+    nodes_info(Params, []).
+
+-spec nodes_info(#erls_params{}, [binary()]) -> {ok, list()} | {error, any()}.
+nodes_info(#erls_params{} = Params, Nodes) when erlang:is_list(Nodes) ->
+    erls_resource:get(Params, filename:join("_nodes", commas(Nodes)), [], [],
                       Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
@@ -325,4 +350,4 @@ commas(Bin) when is_binary(Bin) ->
 commas([]) ->
     <<>>;
 commas([H | T]) ->
-    << H/binary, << <<",", B/binary>> || B <- T >> >>.
+    << H/binary, << <<",", B/binary>> || B <- T >>/binary >>.
