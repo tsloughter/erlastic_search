@@ -5,7 +5,7 @@
               {registered,[]},
               {applications,[kernel,stdlib,ssl,hackney,jsx]},
               {start_phases,[]},
-              {contributors,["Tristan Sloughter"]},
+              {maintainers,["Tristan Sloughter"]},
               {licenses,["LGPL"]},
               {links,[{"Github",
                        "https://github.com/tsloughter/erlastic_search"}]}]}.
