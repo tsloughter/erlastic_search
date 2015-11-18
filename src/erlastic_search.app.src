@@ -1,6 +1,6 @@
 {application,erlastic_search,
              [{description,"An Erlang app for communicating with Elastic Search's rest interface."},
-              {vsn,"1.1.0"},
+              {vsn,"git"},
               {modules,[]},
               {registered,[]},
               {applications,[kernel,stdlib,ssl,hackney,jsx]},
