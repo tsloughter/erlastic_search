@@ -197,11 +197,11 @@ upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Doc), is_list(O
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
     Body = lists:map(fun({Index, Type, Id, Doc}) when is_binary(Doc) ->
                              Header = jsx:encode([
-                                                  {<<"index">>, [{[
+                                                  {<<"index">>, [
                                                                   {<<"_index">>, Index},
                                                                   {<<"_type">>, Type},
                                                                   {<<"_id">>, Id}
-                                                                  ]}]}]),
+                                                                  ]}]),
                              [Header, <<"\n">>, Doc, <<"\n">>];
                         ({Index, Type, Id, Doc}) when is_list(Doc) ->
                              Header = jsx:encode([
