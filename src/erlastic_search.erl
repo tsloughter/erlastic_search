@@ -131,8 +131,10 @@ put_mapping(Index, Type, Doc) ->
     put_mapping(#erls_params{}, Index, Type, Doc).
 
 -spec put_mapping(#erls_params{}, binary(), binary(), list() | binary()) -> {ok, list()} | {error, any()}.
-put_mapping(Params, Index, Type, Doc) ->
-    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], jsx:encode(Doc), Params#erls_params.http_client_options).
+put_mapping(Params, Index, Type, Doc) when is_list(Doc) ->
+    put_mapping(Params, Index, Type, jsx:encode(Doc));
+put_mapping(Params, Index, Type, Doc) when is_binary(Doc) ->
+    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], Doc, Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
