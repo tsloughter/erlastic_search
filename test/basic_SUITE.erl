@@ -41,7 +41,7 @@ index_id(Config) ->
 index_encoded_id(Config) ->
     IndexName = ?config(index_name, Config),
     Id = create_random_name(<<"es_id_">>),
-    {ok, _} = erlastic_search:index_doc_with_id(IndexName, <<"type_1">>, Id, jsx:encode([{<<"hello">>, <<"there">>}])).
+    {ok, _} = erlastic_search:index_doc_with_id(IndexName, <<"type_1">>, Id, ?ERLASTIC_SEARCH_JSON_MODULE:encode([{<<"hello">>, <<"there">>}])).
 
 index_no_id(Config) ->
     IndexName = ?config(index_name, Config),

@@ -1,0 +1,13 @@
+ErlOpts = proplists:get_value(erl_opts, CONFIG),
+
+JsonModuleStr = case os:getenv("ERLASTIC_SEARCH_JSON_MODULE") of
+    Value when erlang:is_list(Value), erlang:length(Value) > 0 ->
+        Value;
+    _ ->
+        "jsx"
+end,
+
+JsonModule = erlang:list_to_atom(JsonModuleStr),
+
+NewErlOpts = [ {d, 'ERLASTIC_SEARCH_JSON_MODULE', JsonModule} | ErlOpts],
+lists:keystore(erl_opts, 1, CONFIG, {erl_opts, NewErlOpts}).
