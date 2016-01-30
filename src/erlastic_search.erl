@@ -132,7 +132,7 @@ put_mapping(Index, Type, Doc) ->
 
 -spec put_mapping(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_json()} | {error, any()}.
 put_mapping(Params, Index, Type, Doc) when is_list(Doc); is_tuple(Doc) ->
-    put_mapping(Params, Index, Type, ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc));
+    put_mapping(Params, Index, Type, erls_json:encode(Doc));
 put_mapping(Params, Index, Type, Doc) when is_binary(Doc) ->
     erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], Doc, Params#erls_params.http_client_options).
 
@@ -149,7 +149,7 @@ index_doc(Index, Type, Doc) ->
 
 -spec index_doc(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_json()} | {error, any()}.
 index_doc(Params, Index, Type, Doc) when is_list(Doc); is_tuple(Doc) ->
-    index_doc(Params, Index, Type, ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc));
+    index_doc(Params, Index, Type, erls_json:encode(Doc));
 index_doc(Params, Index, Type, Doc) when is_binary(Doc) ->
     erls_resource:post(Params, filename:join(Index, Type), [], [], Doc, Params#erls_params.http_client_options).
 
@@ -170,7 +170,7 @@ index_doc_with_id(Params, Index, Type, Id, Doc) ->
 
 -spec index_doc_with_id_opts(#erls_params{}, binary(), binary(), binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_json()} | {error, any()}.
 index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc)) ->
-    index_doc_with_id_opts(Params, Index, Type, Id, ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc), Opts);
+    index_doc_with_id_opts(Params, Index, Type, Id, erls_json:encode(Doc), Opts);
 index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_binary(Doc), is_list(Opts) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Doc, Params#erls_params.http_client_options).
 
@@ -190,7 +190,8 @@ upsert_doc(Params, Index, Type, Id, Doc) ->
 
 -spec upsert_doc_opts(#erls_params{}, binary(), binary(), binary(), erlastic_json(), list()) -> {ok, erlastic_json()} | {error, any()}.
 upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc)) ->
-    DocBin = ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc),
+    DocBin = erls_json:encode(Doc),
+    %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
     Body = <<"{\"doc_as_upsert\":true,\"doc\":", DocBin/binary, "}">>,
     erls_resource:post(Params, filename:join([Index, Type, Id, "_update"]), [], Opts,
                        Body,
@@ -200,24 +201,13 @@ upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list
 -spec bulk_index_docs(#erls_params{}, list()) -> {ok, erlastic_json()} | {error, any()}.
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
     Body = lists:map(fun({Index, Type, Id, Doc}) when is_binary(Doc) ->
-                             Header = jsx:encode([
-                                                  {<<"index">>, [
-                                                                  {<<"_index">>, Index},
-                                                                  {<<"_type">>, Type},
-                                                                  {<<"_id">>, Id}
-                                                                  ]}]),
+                             Header = bulk_index_docs_header(Index, Type, Id),
                              [Header, <<"\n">>, Doc, <<"\n">>];
                         ({Index, Type, Id, Doc}) when is_list(Doc); is_tuple(Doc) ->
-                             Header = jsx:encode([
-                                                 {<<"index">>, [
-                                                                 {<<"_index">>, Index},
-                                                                 {<<"_type">>, Type},
-                                                                 {<<"_id">>, Id}
-                                                                 ]}]),
-                             [Header, <<"\n">>, ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc), <<"\n">>]
+                             Header = bulk_index_docs_header(Index, Type, Id),
+                             [Header, <<"\n">>, erls_json:encode(Doc), <<"\n">>]
                      end, IndexTypeIdJsonTuples),
     erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
-
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -243,7 +233,7 @@ search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
 search(Params, Index, Type, Query, Opts) when is_binary(Query) ->
     erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, Params#erls_params.http_client_options);
 search(Params, Index, Type, Query, Opts) ->
-    erls_resource:post(Params, filename:join([commas(Index), Type, <<"_search">>]), [], Opts, ?ERLASTIC_SEARCH_JSON_MODULE:encode(Query), Params#erls_params.http_client_options).
+    erls_resource:post(Params, filename:join([commas(Index), Type, <<"_search">>]), [], Opts, erls_json:encode(Query), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -305,10 +295,10 @@ delete_doc_by_query_doc(Index, Type, Doc) ->
     delete_doc_by_query_doc(#erls_params{}, Index, Type, Doc).
 
 delete_doc_by_query_doc(Params, Index, any, Doc) ->
-    erls_resource:delete(Params, filename:join([Index, <<"_query">>]), [], [], ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc), Params#erls_params.http_client_options);
+    erls_resource:delete(Params, filename:join([Index, <<"_query">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options);
 
 delete_doc_by_query_doc(Params, Index, Type, Doc) ->
-    erls_resource:delete(Params, filename:join([Index, Type, <<"_query">>]), [], [], ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc), Params#erls_params.http_client_options).
+    erls_resource:delete(Params, filename:join([Index, Type, <<"_query">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -332,7 +322,7 @@ percolator_add(Index, Name, Query) ->
     percolator_add(#erls_params{}, Index, Name, Query).
 
 percolator_add(Params, Index, Name, Query) ->
-    erls_resource:put(Params, filename:join([<<"_percolator">>, commas(Index), Name]), [], [], ?ERLASTIC_SEARCH_JSON_MODULE:encode(Query), Params#erls_params.http_client_options).
+    erls_resource:put(Params, filename:join([<<"_percolator">>, commas(Index), Name]), [], [], erls_json:encode(Query), Params#erls_params.http_client_options).
 
 percolator_del(Index, Name) ->
     percolator_del(#erls_params{}, Index, Name).
@@ -344,7 +334,7 @@ percolate(Index, Type, Doc) ->
     percolate(#erls_params{}, Index, Type, Doc).
 
 percolate(Params, Index, Type, Doc) ->
-    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_percolate">>]), [], [], ?ERLASTIC_SEARCH_JSON_MODULE:encode(Doc), Params#erls_params.http_client_options).
+    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_percolate">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options).
 
 %%% Internal functions
 
@@ -355,3 +345,8 @@ commas([]) ->
     <<>>;
 commas([H | T]) ->
     << H/binary, << <<",", B/binary>> || B <- T >>/binary >>.
+
+-spec bulk_index_docs_header(binary(), binary(), binary()) -> binary().
+bulk_index_docs_header(Index, Type, Id) ->
+    %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
+    <<"{\"index\":{\"_index\":\"", Index/binary, "\",\"_type\":\"", Type/binary, "\",\"_id\":\"", Id/binary, "\"}}">>.
