@@ -1,5 +1,6 @@
 -type header() :: {binary(), binary()}.
 -type headers() :: [header()].
+-type erlastic_json() :: tuple() | list().
 
 -record(erls_params, {
           host        = <<"127.0.0.1">> :: binary(),
