@@ -16,7 +16,7 @@
 %%--------------------------------------------------------------------
 -spec encode(erlastic_json()) -> binary().
 encode(Json) ->
-    ?ERLASTIC_SEARCH_JSON_MODULE:encode(Json).
+    jsx:encode(Json).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -27,4 +27,4 @@ encode(Json) ->
 %%--------------------------------------------------------------------
 -spec decode(binary()) -> erlastic_json().
 decode(BinaryJson) ->
-    ?ERLASTIC_SEARCH_JSON_MODULE:decode(BinaryJson).
+    jsx:decode(BinaryJson).
