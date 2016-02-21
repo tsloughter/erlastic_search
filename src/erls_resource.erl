@@ -80,6 +80,11 @@ do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout
                 {ok, RespBody} -> {error, {Status, erls_json:decode(RespBody)}};
                 {error, _Reason} -> {error, Status}
             end;
+        {ok, ClientRef} ->
+            %% that's when the options passed to hackney included `async'
+            %% this reference can then be used to match the messages from
+            %% hackney when ES replies; see the hackney doc for more information
+            {ok, {async, ClientRef}};
         {error, R} ->
             {error, R}
     end.
