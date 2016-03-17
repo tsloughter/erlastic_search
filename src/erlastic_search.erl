@@ -197,17 +197,24 @@ upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list
                        Body,
                        Params#erls_params.http_client_options).
 
-%% Documents is [ {Index, Type, Id, Json}, ... ]
--spec bulk_index_docs(#erls_params{}, list()) -> {ok, erlastic_success_result()} | {error, any()}.
+%% Documents is [ {Index, Type, Id, Json}, {Index, Type, Id, HeaderInformation, Json}... ]
+-spec bulk_index_docs(#erls_params{}, list()) -> {ok, list()} | {error, any()}.
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
-    Body = lists:map(fun({Index, Type, Id, Doc}) when is_binary(Doc) ->
-                             Header = bulk_index_docs_header(Index, Type, Id),
-                             [Header, <<"\n">>, Doc, <<"\n">>];
-                        ({Index, Type, Id, Doc}) when is_list(Doc); is_tuple(Doc) ->
-                             Header = bulk_index_docs_header(Index, Type, Id),
-                             [Header, <<"\n">>, erls_json:encode(Doc), <<"\n">>]
-                     end, IndexTypeIdJsonTuples),
-    erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
+     MakeBody = fun
+          (Doc) when is_binary(Doc) ->
+               Doc;
+          (Doc) when is_list(Doc) orelse is_map(Doc) ->
+               erls_json:encode(Doc)
+     end,
+
+     Body = lists:map(fun
+          Build({Index, Type, Id, Doc}) ->
+               Build({Index, Type, Id, [], Doc});
+          Build({Index, Type, Id, HeaderInformation, Doc}) ->
+               Header = bulk_index_docs_header(Index, Type, Id, HeaderInformation),
+               [ Header, <<"\n">>, MakeBody(Doc), <<"\n">> ]
+     end, IndexTypeIdJsonTuples),
+     erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -346,7 +353,11 @@ commas([]) ->
 commas([H | T]) ->
     << H/binary, << <<",", B/binary>> || B <- T >>/binary >>.
 
--spec bulk_index_docs_header(binary(), binary(), binary()) -> binary().
-bulk_index_docs_header(Index, Type, Id) ->
-    %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
-    <<"{\"index\":{\"_index\":\"", Index/binary, "\",\"_type\":\"", Type/binary, "\",\"_id\":\"", Id/binary, "\"}}">>.
+-spec bulk_index_docs_header(binary(), binary(), binary(), list()) -> binary().
+bulk_index_docs_header(Index, Type, Id, HeaderInformation) ->
+    erls_json:encode([{<<"index">>, [
+        {<<"_index">>, Index}
+        ,{<<"_type">>, Type}
+        ,{<<"_id">>, Id}
+        | HeaderInformation
+    ]}]).
