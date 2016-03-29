@@ -6,8 +6,8 @@
 -type erlastic_success_result() :: erlastic_json() | {async, HackneyRef :: any()}.
 
 -record(erls_params, {
-          host        = <<"127.0.0.1">> :: binary(),
-          port        = 9200 :: integer(),
+          host        = erls_config:get_host() :: binary(),
+          port        = erls_config:get_port() :: integer(),
 
           % These are passed verbatim to the underlying http client in use.
           http_client_options = []:: [term()], 
