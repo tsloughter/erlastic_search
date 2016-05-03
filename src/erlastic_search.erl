@@ -132,10 +132,8 @@ put_mapping(Index, Type, Doc) ->
     put_mapping(#erls_params{}, Index, Type, Doc).
 
 -spec put_mapping(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-put_mapping(Params, Index, Type, Doc) when is_list(Doc); is_tuple(Doc); is_map(Doc) ->
-    put_mapping(Params, Index, Type, erls_json:encode(Doc));
-put_mapping(Params, Index, Type, Doc) when is_binary(Doc) ->
-    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], Doc, Params#erls_params.http_client_options).
+put_mapping(Params, Index, Type, Doc) ->
+    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -153,10 +151,8 @@ index_doc(Params, Index, Type, Doc) ->
     index_doc_with_opts(Params, Index, Type, Doc, []).
 
 -spec index_doc_with_opts(#erls_params{}, binary(), binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
-index_doc_with_opts(Params, Index, Type, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
-    index_doc_with_opts(Params, Index, Type, erls_json:encode(Doc), Opts);
-index_doc_with_opts(Params, Index, Type, Doc, Opts) when is_list(Opts), is_binary(Doc) ->
-    erls_resource:post(Params, filename:join(Index, Type), [], Opts, Doc, Params#erls_params.http_client_options).
+index_doc_with_opts(Params, Index, Type, Doc, Opts) when is_list(Opts) ->
+    erls_resource:post(Params, filename:join(Index, Type), [], Opts, maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -176,10 +172,8 @@ index_doc_with_id(Params, Index, Type, Id, Doc) ->
 -spec index_doc_with_id_opts(#erls_params{}, binary(), binary(), binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
 index_doc_with_id_opts(Params, Index, Type, undefined, Doc, Opts) ->
     index_doc_with_opts(Params, Index, Type, Doc, Opts);
-index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
-    index_doc_with_id_opts(Params, Index, Type, Id, erls_json:encode(Doc), Opts);
-index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), is_binary(Doc) ->
-    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Doc, Params#erls_params.http_client_options).
+index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts) ->
+    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 
 %%--------------------------------------------------------------------
@@ -212,7 +206,7 @@ bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
                Build({Index, Type, Id, [], Doc});
           Build({Index, Type, Id, HeaderInformation, Doc}) ->
                Header = bulk_index_docs_header(Index, Type, Id, HeaderInformation),
-               [ Header, <<"\n">>, bulk_index_doc_body(Doc), <<"\n">> ]
+               [ Header, <<"\n">>, maybe_encode_doc(Doc), <<"\n">> ]
      end, IndexTypeIdJsonTuples),
      erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
 
@@ -369,6 +363,6 @@ bulk_index_docs_header(Index, Type, Id, HeaderInformation) ->
     %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
     jsx:encode([{<<"index">>, IndexHeaderJson2}]).
 
--spec bulk_index_doc_body(binary() | erlastic_json()) -> binary().
-bulk_index_doc_body(Bin) when is_binary(Bin) -> Bin;
-bulk_index_doc_body(Doc) -> erls_json:encode(Doc).
+-spec maybe_encode_doc(binary() | erlastic_json()) -> binary().
+maybe_encode_doc(Bin) when is_binary(Bin) -> Bin;
+maybe_encode_doc(Doc) when is_list(Doc); is_tuple(Doc); is_map(Doc) -> erls_json:encode(Doc).
