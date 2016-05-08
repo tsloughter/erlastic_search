@@ -13,7 +13,7 @@
 %% @doc
 %% Retrieves the default host.
 %% If nothing is defined in the app env for the key 'host', it's
-%% <<"127.0.0.1">>.
+%% 127.0.0.1
 %% @end
 %%--------------------------------------------------------------------
 get_host() ->
