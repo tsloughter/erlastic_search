@@ -20,6 +20,7 @@
         ,put_mapping/4
         ,index_doc/3
         ,index_doc/4
+        ,index_doc_with_opts/5
         ,index_doc_with_id/4
         ,index_doc_with_id/5
         ,index_doc_with_id_opts/6
@@ -131,10 +132,8 @@ put_mapping(Index, Type, Doc) ->
     put_mapping(#erls_params{}, Index, Type, Doc).
 
 -spec put_mapping(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-put_mapping(Params, Index, Type, Doc) when is_list(Doc); is_tuple(Doc) ->
-    put_mapping(Params, Index, Type, erls_json:encode(Doc));
-put_mapping(Params, Index, Type, Doc) when is_binary(Doc) ->
-    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], Doc, Params#erls_params.http_client_options).
+put_mapping(Params, Index, Type, Doc) ->
+    erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -148,10 +147,12 @@ index_doc(Index, Type, Doc) ->
     index_doc(#erls_params{}, Index, Type, Doc).
 
 -spec index_doc(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-index_doc(Params, Index, Type, Doc) when is_list(Doc); is_tuple(Doc) ->
-    index_doc(Params, Index, Type, erls_json:encode(Doc));
-index_doc(Params, Index, Type, Doc) when is_binary(Doc) ->
-    erls_resource:post(Params, filename:join(Index, Type), [], [], Doc, Params#erls_params.http_client_options).
+index_doc(Params, Index, Type, Doc) ->
+    index_doc_with_opts(Params, Index, Type, Doc, []).
+
+-spec index_doc_with_opts(#erls_params{}, binary(), binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
+index_doc_with_opts(Params, Index, Type, Doc, Opts) when is_list(Opts) ->
+    erls_resource:post(Params, filename:join(Index, Type), [], Opts, maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -169,10 +170,10 @@ index_doc_with_id(Params, Index, Type, Id, Doc) ->
     index_doc_with_id_opts(Params, Index, Type, Id, Doc, []).
 
 -spec index_doc_with_id_opts(#erls_params{}, binary(), binary(), binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
-index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc)) ->
-    index_doc_with_id_opts(Params, Index, Type, Id, erls_json:encode(Doc), Opts);
-index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_binary(Doc), is_list(Opts) ->
-    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, Doc, Params#erls_params.http_client_options).
+index_doc_with_id_opts(Params, Index, Type, undefined, Doc, Opts) ->
+    index_doc_with_opts(Params, Index, Type, Doc, Opts);
+index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts) ->
+    erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 
 %%--------------------------------------------------------------------
@@ -189,7 +190,7 @@ upsert_doc(Params, Index, Type, Id, Doc) ->
     upsert_doc_opts(Params, Index, Type, Id, Doc, []).
 
 -spec upsert_doc_opts(#erls_params{}, binary(), binary(), binary(), erlastic_json(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
-upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc)) ->
+upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
     DocBin = erls_json:encode(Doc),
     %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
     Body = <<"{\"doc_as_upsert\":true,\"doc\":", DocBin/binary, "}">>,
@@ -200,19 +201,12 @@ upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list
 %% Documents is [ {Index, Type, Id, Json}, {Index, Type, Id, HeaderInformation, Json}... ]
 -spec bulk_index_docs(#erls_params{}, list()) -> {ok, list()} | {error, any()}.
 bulk_index_docs(Params, IndexTypeIdJsonTuples) ->
-     MakeBody = fun
-          (Doc) when is_binary(Doc) ->
-               Doc;
-          (Doc) when is_list(Doc) orelse is_map(Doc) ->
-               erls_json:encode(Doc)
-     end,
-
      Body = lists:map(fun
           Build({Index, Type, Id, Doc}) ->
                Build({Index, Type, Id, [], Doc});
           Build({Index, Type, Id, HeaderInformation, Doc}) ->
                Header = bulk_index_docs_header(Index, Type, Id, HeaderInformation),
-               [ Header, <<"\n">>, MakeBody(Doc), <<"\n">> ]
+               [ Header, <<"\n">>, maybe_encode_doc(Doc), <<"\n">> ]
      end, IndexTypeIdJsonTuples),
      erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
 
@@ -355,9 +349,20 @@ commas([H | T]) ->
 
 -spec bulk_index_docs_header(binary(), binary(), binary(), list()) -> binary().
 bulk_index_docs_header(Index, Type, Id, HeaderInformation) ->
-    erls_json:encode([{<<"index">>, [
+    IndexHeaderJson1 = [
         {<<"_index">>, Index}
         ,{<<"_type">>, Type}
-        ,{<<"_id">>, Id}
         | HeaderInformation
-    ]}]).
+    ],
+
+    IndexHeaderJson2 = case Id =:= undefined of
+        true -> [{<<"_id">>, Id} | IndexHeaderJson1];
+        false -> IndexHeaderJson1
+    end,
+
+    %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
+    jsx:encode([{<<"index">>, IndexHeaderJson2}]).
+
+-spec maybe_encode_doc(binary() | erlastic_json()) -> binary().
+maybe_encode_doc(Bin) when is_binary(Bin) -> Bin;
+maybe_encode_doc(Doc) when is_list(Doc); is_tuple(Doc); is_map(Doc) -> erls_json:encode(Doc).

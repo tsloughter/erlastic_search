@@ -1,6 +1,6 @@
 -type header() :: {binary(), binary()}.
 -type headers() :: [header()].
--type erlastic_json() :: tuple() | list().
+-type erlastic_json() :: tuple() | list() | map().
 %% Hackney async references actually are just that, references... but it seems
 %% to be an undocumented implementation detail; doc (and specs) only says `any()'
 -type erlastic_success_result() :: erlastic_json() | {async, HackneyRef :: any()}.
