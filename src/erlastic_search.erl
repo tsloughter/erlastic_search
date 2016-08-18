@@ -32,6 +32,8 @@
         ,search/3
         ,search/5
         ,search_limit/4
+        ,search_scroll/4
+        ,search_scroll/1
         ,get_doc/3
         ,get_doc/4
         ,flush_index/1
@@ -229,6 +231,23 @@ search(Index, Type, Query) ->
 -spec search_limit(binary() | list(), binary(), erlastic_json() | binary(), integer()) -> {ok, erlastic_success_result()} | {error, any()}.
 search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
     search(#erls_params{}, Index, Type, Query, [{<<"size">>, integer_to_list(Limit)}]).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% search_scroll/4 -- Takes the index, type name and search query
+%% sends it to the Elasticsearch server specified in Params.
+%% Returns search results along with scroll id which can be passed
+%% to search_scroll/1 to get next set of search results
+%% @end
+%%--------------------------------------------------------------------
+-spec search_scroll(binary() | list(), binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
+search_scroll(Index, Type, Query, Timeout) ->
+    search(#erls_params{}, Index, Type, Query, [{<<"scroll">>, list_to_binary(Timeout)}]).
+
+-spec search_scroll(binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+search_scrolling(Query) ->
+     Params = #erls_params{},
+     erls_resource:post(Params, filename:join([<<"_search">>, <<"scroll">>]), [], [], erls_json:encode(Query), Params#erls_params.http_client_options).
 
 -spec search(#erls_params{}, list() | binary(), list() | binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
 search(Params, Index, Type, Query, Opts) when is_binary(Query) ->
