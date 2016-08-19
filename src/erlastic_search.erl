@@ -245,7 +245,7 @@ search_scroll(Index, Type, Query, Timeout) ->
     search(#erls_params{}, Index, Type, Query, [{<<"scroll">>, list_to_binary(Timeout)}]).
 
 -spec search_scroll(binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-search_scrolling(Query) ->
+search_scroll(Query) ->
      Params = #erls_params{},
      erls_resource:post(Params, filename:join([<<"_search">>, <<"scroll">>]), [], [], erls_json:encode(Query), Params#erls_params.http_client_options).
 
