@@ -375,8 +375,8 @@ bulk_index_docs_header(Index, Type, Id, HeaderInformation) ->
     ],
 
     IndexHeaderJson2 = case Id =:= undefined of
-        true -> [{<<"_id">>, Id} | IndexHeaderJson1];
-        false -> IndexHeaderJson1
+        true ->  IndexHeaderJson1;
+        false -> [ {<<"_id">>, Id} | IndexHeaderJson1]
     end,
 
     %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
