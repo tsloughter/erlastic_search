@@ -34,6 +34,7 @@
         ,search_limit/4
         ,search_scroll/4
         ,search_scroll/1
+        ,multi_search/2
         ,get_doc/3
         ,get_doc/4
         ,get_doc_opts/5
@@ -255,6 +256,13 @@ search(Params, Index, Type, Query, Opts) when is_binary(Query) ->
     erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, Params#erls_params.http_client_options);
 search(Params, Index, Type, Query, Opts) ->
     erls_resource:post(Params, filename:join([commas(Index), Type, <<"_search">>]), [], Opts, erls_json:encode(Query), Params#erls_params.http_client_options).
+
+-spec multi_search(#erls_params{}, list({HeaderInformation :: headers(), SearchRequest :: erlastic_json() | binary()})) -> {ok, ResultJson :: erlastic_success_result()} | {error, Reason :: any()}.
+multi_search(Params, HeaderJsonTuples) ->
+    Body = lists:map(fun({HeaderInformation, SearchRequest}) ->
+        [ jsx:encode(HeaderInformation), <<"\n">>, maybe_encode_doc(SearchRequest), <<"\n">> ]
+    end, HeaderJsonTuples),
+    erls_resource:get(Params, <<"/_msearch">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
