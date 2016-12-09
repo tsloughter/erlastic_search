@@ -54,6 +54,8 @@
         ,delete_doc_by_query_doc/4
         ,delete_index/1
         ,delete_index/2
+        ,index_exists/1
+        ,index_exists/2
         ,optimize_index/1
         ,optimize_index/2
         ,percolator_add/3
@@ -345,6 +347,24 @@ delete_index(Index) ->
 delete_index(Params, Index) ->
     erls_resource:delete(Params, Index, [], [], [],
                          Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Tests if a given index exists
+%% See https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html
+%% @end
+%%--------------------------------------------------------------------
+-spec index_exists(binary()) -> {ok, boolean()} | {error, any()}.
+index_exists(Index) ->
+    index_exists(#erls_params{}, Index).
+
+-spec index_exists(#erls_params{}, binary()) -> {ok, boolean()} | {error, any()}.
+index_exists(Params, Index) ->
+    case erls_resource:head(Params, Index, [], [], Params#erls_params.http_client_options) of
+        ok -> {ok, true};
+        {error, 404} -> {ok, false};
+        {error, _Else} = Error -> Error
+    end.
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
