@@ -18,6 +18,13 @@
         ,nodes_info/2
         ,put_mapping/3
         ,put_mapping/4
+        ,get_mapping/0
+        ,get_mapping/1
+        ,get_mapping/2
+        ,get_mapping/3
+        ,get_settings/0
+        ,get_settings/1
+        ,get_settings/2
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_opts/5
@@ -138,6 +145,87 @@ put_mapping(Index, Type, Doc) ->
 -spec put_mapping(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 put_mapping(Params, Index, Type, Doc) ->
     erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the mapping for all indices, using default server parameters
+%% For all flavours of `get_mapping/*' functions, see the doc at
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping() -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping() ->
+    get_mapping(#erls_params{}, <<"_all">>, <<"_all">>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% If passed server parameters, retrieves the mapping for all indices on that
+%% server; if passed an index name, retrieves the mapping for that index using
+%% default server parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping(#erls_params{} | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping(#erls_params{} = Params) ->
+    get_mapping(Params, <<"_all">>, <<"_all">>);
+get_mapping(Index) when is_binary(Index) ->
+    get_mapping(#erls_params{}, Index, <<"_all">>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% If passed server parameters and an index name, retrieves the mapping for
+%% that index on that server; if passed an index name and a type name,
+%% retrieves the mapping for that specific type
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping(#erls_params{} | binary(), binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping(#erls_params{} = Params, Index) when is_binary(Index) ->
+    get_mapping(Params, Index, <<"_all">>);
+get_mapping(Index, Type) when is_binary(Index), is_binary(Type) ->
+    get_mapping(#erls_params{}, Index, Type).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the mapping for the given index and type, using the provided
+%% server parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping(#erls_params{}, binary(), binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping(#erls_params{} = Params, Index, Type) when is_binary(Index), is_binary(Type) ->
+    erls_resource:get(Params, filename:join([Index, <<"_mapping">>, Type]), [], [], [], Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the settings for all indices, using default server parameters
+%% For all flavours of `get_settings/*' functions, see the doc at
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-settings.html
+%% @end
+%%--------------------------------------------------------------------
+-spec get_settings() -> {ok, erlastic_success_result()} | {error, any()}.
+get_settings() ->
+    get_settings(#erls_params{}, <<"_all">>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% If passed server parameters, retrieves the settings for all indices on that
+%% server; if passed an index name, retrieves the settings for that index using
+%% default server parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_settings(#erls_params{} | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_settings(#erls_params{} = Params) ->
+    get_settings(Params, <<"_all">>);
+get_settings(Index) when is_binary(Index) ->
+    get_settings(#erls_params{}, Index).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the settings for the given index, using the provided server
+%% parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_settings(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_settings(#erls_params{} = Params, Index) when is_binary(Index) ->
+    erls_resource:get(Params, filename:join([Index, <<"_settings">>]), [], [], [], Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
