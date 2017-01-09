@@ -3,7 +3,7 @@
               {vsn,"git"},
               {modules,[]},
               {registered,[]},
-              {applications,[kernel,stdlib,ssl,hackney,jsx]},
+              {applications,[kernel,stdlib,ssl,hackney]},
               {start_phases,[]},
               {maintainers,["Tristan Sloughter"]},
               {licenses,["LGPL"]},

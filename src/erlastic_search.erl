@@ -10,6 +10,7 @@
 
 -export([create_index/1
         ,create_index/2
+        ,create_index/3
         ,stats_index/0
         ,stats_index/1
         ,stats_index/2
@@ -18,6 +19,13 @@
         ,nodes_info/2
         ,put_mapping/3
         ,put_mapping/4
+        ,get_mapping/0
+        ,get_mapping/1
+        ,get_mapping/2
+        ,get_mapping/3
+        ,get_settings/0
+        ,get_settings/1
+        ,get_settings/2
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_opts/5
@@ -34,9 +42,11 @@
         ,search_limit/4
         ,search_scroll/4
         ,search_scroll/1
+        ,multi_search/2
         ,get_doc/3
         ,get_doc/4
         ,get_multi_doc/3
+        ,get_doc_opts/5
         ,flush_index/1
         ,flush_index/2
         ,flush_all/0
@@ -53,6 +63,8 @@
         ,delete_doc_by_query_doc/4
         ,delete_index/1
         ,delete_index/2
+        ,index_exists/1
+        ,index_exists/2
         ,optimize_index/1
         ,optimize_index/2
         ,percolator_add/3
@@ -72,17 +84,32 @@
 %%--------------------------------------------------------------------
 -spec create_index(binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 create_index(Index) ->
-    create_index(#erls_params{}, Index).
+    create_index(#erls_params{}, Index, <<>>).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the name of an index and the record describing the servers
-%% details to create and sends the request to Elasticsearch.
+%% details to create and sends the request to Elasticsearch; or else
+%% takes the name of the index to create and a body to use in the request; and
+%% creates that index using the default settings on localhost.
+%% (see the doc at https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html)
 %% @end
 %%--------------------------------------------------------------------
 -spec create_index(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-create_index(Params, Index) ->
-    erls_resource:put(Params, Index, [], [], [], Params#erls_params.http_client_options).
+create_index(#erls_params{} = Params, Index) when is_binary(Index) ->
+    create_index(Params, Index, <<>>);
+create_index(Index, Doc) when is_binary(Index), (is_binary(Doc) orelse is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
+    create_index(#erls_params{}, Index, Doc).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Takes a record describing the servers details, an index name, and a request body, and creates that index
+%% (see the doc at https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-create-index.html)
+%% @end
+%%--------------------------------------------------------------------
+-spec create_index(#erls_params{}, binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+create_index(Params, Index, Doc) when is_binary(Index), (is_binary(Doc) orelse is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
+    erls_resource:put(Params, Index, [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -137,6 +164,87 @@ put_mapping(Index, Type, Doc) ->
 -spec put_mapping(#erls_params{}, binary(), binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 put_mapping(Params, Index, Type, Doc) ->
     erls_resource:put(Params, filename:join([Index, Type, "_mapping"]), [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the mapping for all indices, using default server parameters
+%% For all flavours of `get_mapping/*' functions, see the doc at
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-mapping.html
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping() -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping() ->
+    get_mapping(#erls_params{}, <<"_all">>, <<"_all">>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% If passed server parameters, retrieves the mapping for all indices on that
+%% server; if passed an index name, retrieves the mapping for that index using
+%% default server parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping(#erls_params{} | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping(#erls_params{} = Params) ->
+    get_mapping(Params, <<"_all">>, <<"_all">>);
+get_mapping(Index) when is_binary(Index) ->
+    get_mapping(#erls_params{}, Index, <<"_all">>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% If passed server parameters and an index name, retrieves the mapping for
+%% that index on that server; if passed an index name and a type name,
+%% retrieves the mapping for that specific type
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping(#erls_params{} | binary(), binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping(#erls_params{} = Params, Index) when is_binary(Index) ->
+    get_mapping(Params, Index, <<"_all">>);
+get_mapping(Index, Type) when is_binary(Index), is_binary(Type) ->
+    get_mapping(#erls_params{}, Index, Type).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the mapping for the given index and type, using the provided
+%% server parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_mapping(#erls_params{}, binary(), binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_mapping(#erls_params{} = Params, Index, Type) when is_binary(Index), is_binary(Type) ->
+    erls_resource:get(Params, filename:join([Index, <<"_mapping">>, Type]), [], [], [], Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the settings for all indices, using default server parameters
+%% For all flavours of `get_settings/*' functions, see the doc at
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-get-settings.html
+%% @end
+%%--------------------------------------------------------------------
+-spec get_settings() -> {ok, erlastic_success_result()} | {error, any()}.
+get_settings() ->
+    get_settings(#erls_params{}, <<"_all">>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% If passed server parameters, retrieves the settings for all indices on that
+%% server; if passed an index name, retrieves the settings for that index using
+%% default server parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_settings(#erls_params{} | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_settings(#erls_params{} = Params) ->
+    get_settings(Params, <<"_all">>);
+get_settings(Index) when is_binary(Index) ->
+    get_settings(#erls_params{}, Index).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the settings for the given index, using the provided server
+%% parameters
+%% @end
+%%--------------------------------------------------------------------
+-spec get_settings(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_settings(#erls_params{} = Params, Index) when is_binary(Index) ->
+    erls_resource:get(Params, filename:join([Index, <<"_settings">>]), [], [], [], Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -256,6 +364,13 @@ search(Params, Index, Type, Query, Opts) when is_binary(Query) ->
 search(Params, Index, Type, Query, Opts) ->
     erls_resource:post(Params, filename:join([commas(Index), Type, <<"_search">>]), [], Opts, erls_json:encode(Query), Params#erls_params.http_client_options).
 
+-spec multi_search(#erls_params{}, list({HeaderInformation :: headers(), SearchRequest :: erlastic_json() | binary()})) -> {ok, ResultJson :: erlastic_success_result()} | {error, Reason :: any()}.
+multi_search(Params, HeaderJsonTuples) ->
+    Body = lists:map(fun({HeaderInformation, SearchRequest}) ->
+        [ jsx:encode(HeaderInformation), <<"\n">>, maybe_encode_doc(SearchRequest), <<"\n">> ]
+    end, HeaderJsonTuples),
+    erls_resource:get(Params, <<"/_msearch">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
+
 %%--------------------------------------------------------------------
 %% @doc
 %% Takes the index and type name and a doc id and sends
@@ -274,7 +389,12 @@ get_doc(Index, Type, Id) ->
 %%--------------------------------------------------------------------
 -spec get_doc(#erls_params{}, binary(), binary(), binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 get_doc(Params, Index, Type, Id) ->
-    erls_resource:get(Params, filename:join([Index, Type, Id]), [], [], Params#erls_params.http_client_options).
+    get_doc_opts(Params, Index, Type, Id, []).
+
+-spec get_doc_opts(#erls_params{}, binary(), binary(), binary(), list()) -> {ok, erlastic_success_result()}
+                                                                          | {error, any()}.
+get_doc_opts(Params, Index, Type, Id, Opts) ->
+    erls_resource:get(Params, filename:join([Index, Type, Id]), [], Opts, Params#erls_params.http_client_options).
 
 -spec get_multi_doc(binary(), binary(), binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 get_multi_doc(Index, Type, Data) ->
@@ -339,6 +459,24 @@ delete_index(Params, Index) ->
     erls_resource:delete(Params, Index, [], [], [],
                          Params#erls_params.http_client_options).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Tests if a given index exists
+%% See https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-exists.html
+%% @end
+%%--------------------------------------------------------------------
+-spec index_exists(binary()) -> {ok, boolean()} | {error, any()}.
+index_exists(Index) ->
+    index_exists(#erls_params{}, Index).
+
+-spec index_exists(#erls_params{}, binary()) -> {ok, boolean()} | {error, any()}.
+index_exists(Params, Index) ->
+    case erls_resource:head(Params, Index, [], [], Params#erls_params.http_client_options) of
+        ok -> {ok, true};
+        {error, 404} -> {ok, false};
+        {error, _Else} = Error -> Error
+    end.
+
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
 
@@ -382,8 +520,8 @@ bulk_index_docs_header(Index, Type, Id, HeaderInformation) ->
     ],
 
     IndexHeaderJson2 = case Id =:= undefined of
-        true -> [{<<"_id">>, Id} | IndexHeaderJson1];
-        false -> IndexHeaderJson1
+        true ->  IndexHeaderJson1;
+        false -> [ {<<"_id">>, Id} | IndexHeaderJson1]
     end,
 
     %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'

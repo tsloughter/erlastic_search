@@ -7,10 +7,12 @@
 -export([index_id/1
         ,index_encoded_id/1
         ,index_no_id/1
+        ,bulk_index_id/1
         ,search/1]).
 
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
+-include("erlastic_search.hrl").
 
 all() ->
     [{group, index_access}].
@@ -19,6 +21,7 @@ groups() ->
     [{index_access, [], [index_id
                         ,index_encoded_id
                         ,index_no_id
+                        ,bulk_index_id
                         ,search]}].
 
 init_per_group(index_access, Config) ->
@@ -46,6 +49,22 @@ index_encoded_id(Config) ->
 index_no_id(Config) ->
     IndexName = ?config(index_name, Config),
     {ok, _} = erlastic_search:index_doc(IndexName, <<"type_1">>, [{<<"hello">>, <<"there">>}]).
+
+bulk_index_id(Config) ->
+    IndexName = ?config(index_name, Config),
+    Id = create_random_name(<<"es_id_">>),
+    Doc = {<<"how">>, <<"you_doing">>}, %% in Joey Tribbiani voice
+    Items = [{IndexName, <<"type_1">>, Id, [Doc]}],
+    {ok, _} = erlastic_search:bulk_index_docs(#erls_params{}, Items),
+    {ok, _} = erlastic_search:flush_index(IndexName),
+    {ok, Resp} = erlastic_search:search(IndexName, <<"how:you_doing">>),
+    {<<"hits">>, Hits} = lists:keyfind(<<"hits">>, 1, Resp),
+    {<<"hits">>, Hits1} = lists:keyfind(<<"hits">>, 1, Hits),
+    F = fun(Item) ->
+                {<<"_id">>, AId} = lists:keyfind(<<"_id">>, 1, Item),
+                AId == Id
+        end,
+    [_] = lists:filter(F, Hits1).
 
 search(Config) ->
     IndexName = ?config(index_name, Config),

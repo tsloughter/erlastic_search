@@ -80,6 +80,12 @@ do_request(#erls_params{host=Host, port=Port, timeout=Timeout, ctimeout=CTimeout
                 {ok, RespBody} -> {error, {Status, erls_json:decode(RespBody)}};
                 {error, _Reason} -> {error, Status}
             end;
+        {ok, 200, _Headers} ->
+            %% we hit this case for HEAD requests, or more generally when
+            %% there's no response body
+            ok;
+        {ok, Not200, _Headers} ->
+            {error, Not200};
         {ok, ClientRef} ->
             %% that's when the options passed to hackney included `async'
             %% this reference can then be used to match the messages from
