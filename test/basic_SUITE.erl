@@ -79,9 +79,12 @@ index_template_mapping(_Config) ->
     {ok, _} = erlastic_search:create_index(TemplatePath, template_mapping_json()),
 
     %% When searching for an index template, we should only need the name, not the full path
-    %% The get_template_mapping_and_settings/1 fun should handle creating the correct path
+    %% The get_templates/1 fun should handle creating the correct path
     [_, TemplateName] = binary:split(TemplatePath, <<"_template/">>),
-    {ok, [{TemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_template_mapping_and_settings(TemplateName),
+    {ok, [{TemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_templates(TemplateName),
+
+    %% Also make sure that the get_templates/0 fun returns the same thing as get_templates/1 with the current state
+    {ok, [{TemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_templates(),
 
     %% The order and aliases are generated automatically, both of which will be default, we will not compare
     ActualTemplateSettingsAndMapping2 = proplists:delete(<<"order">>, ActualTemplateSettingsAndMapping1),

@@ -26,8 +26,9 @@
         ,get_settings/0
         ,get_settings/1
         ,get_settings/2
-        ,get_template_mapping_and_settings/1
-        ,get_template_mapping_and_settings/2
+        ,get_templates/0
+        ,get_templates/1
+        ,get_templates/2
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_opts/5
@@ -249,24 +250,36 @@ get_settings(#erls_params{} = Params, Index) when is_binary(Index) ->
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Retrieves the mapping and settings for the given index template, using the default server
-%% parameters. See docs at:
+%% Retrieves all index templates, using the default server parameters. See docs at:
 %% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
 %% @end
 %%--------------------------------------------------------------------
--spec get_template_mapping_and_settings(binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-get_template_mapping_and_settings(IndexTemplate) ->
-    get_template_mapping_and_settings(#erls_params{}, IndexTemplate).
+-spec get_templates() -> {ok, erlastic_success_result()} | {error, any()}.
+get_templates() ->
+    get_templates(#erls_params{}, <<>>).
 
 %%--------------------------------------------------------------------
 %% @doc
-%% Retrieves the mapping and settings for the given index template, using the provided server
+%% Retrieves the index templates that match the index template string, using the default server parameters
+%% or retrieves all index templates with provided server parameters. See docs at:
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
+%% @end
+%%--------------------------------------------------------------------
+-spec get_templates(binary() | #erls_params{}) -> {ok, erlastic_success_result()} | {error, any()}.
+get_templates(IndexTemplate) when is_binary(IndexTemplate) ->
+    get_templates(#erls_params{}, IndexTemplate);
+get_templates(#erls_params{} = Params) ->
+    get_templates(Params, <<>>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the index templates that match the index template string, using the provided server
 %% parameters. See docs at:
 %% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
 %% @end
 %%--------------------------------------------------------------------
--spec get_template_mapping_and_settings(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
-get_template_mapping_and_settings(#erls_params{http_client_options = HttpClientOptions} = Params, IndexTemplate) ->
+-spec get_templates(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_templates(#erls_params{http_client_options = HttpClientOptions} = Params, IndexTemplate) ->
     erls_resource:get(Params, filename:join([<<"_template">>, IndexTemplate]), [], [], [], HttpClientOptions).
 
 %%--------------------------------------------------------------------
