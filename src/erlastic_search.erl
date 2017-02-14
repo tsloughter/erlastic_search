@@ -26,6 +26,8 @@
         ,get_settings/0
         ,get_settings/1
         ,get_settings/2
+        ,get_template_mapping_and_settings/1
+        ,get_template_mapping_and_settings/2
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_opts/5
@@ -244,6 +246,28 @@ get_settings(Index) when is_binary(Index) ->
 -spec get_settings(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 get_settings(#erls_params{} = Params, Index) when is_binary(Index) ->
     erls_resource:get(Params, filename:join([Index, <<"_settings">>]), [], [], [], Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the mapping and settings for the given index template, using the default server
+%% parameters. See docs at:
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
+%% @end
+%%--------------------------------------------------------------------
+-spec get_template_mapping_and_settings(binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_template_mapping_and_settings(IndexTemplate) ->
+    get_template_mapping_and_settings(#erls_params{}, IndexTemplate).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the mapping and settings for the given index template, using the provided server
+%% parameters. See docs at:
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
+%% @end
+%%--------------------------------------------------------------------
+-spec get_template_mapping_and_settings(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_template_mapping_and_settings(#erls_params{http_client_options = HttpClientOptions} = Params, IndexTemplate) ->
+    erls_resource:get(Params, filename:join([<<"_template">>, IndexTemplate]), [], [], [], HttpClientOptions).
 
 %%--------------------------------------------------------------------
 %% @doc
