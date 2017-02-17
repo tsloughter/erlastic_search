@@ -9,7 +9,7 @@
         ,index_no_id/1
         ,bulk_index_id/1
         ,search/1
-        ,index_template_mapping/1]).
+        ,index_templates/1]).
 
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
@@ -24,7 +24,7 @@ groups() ->
                         ,index_no_id
                         ,bulk_index_id
                         ,search
-                        ,index_template_mapping]}].
+                        ,index_templates]}].
 
 init_per_group(index_access, Config) ->
     erlastic_search_app:start_deps(),
@@ -73,18 +73,17 @@ search(Config) ->
     {ok, _} = erlastic_search:search(IndexName, <<"hello:there">>).
 
 %% @doc Creates an index template, and tests that it exists with the correct settings and mapping
-index_template_mapping(_Config) ->
+index_templates(_Config) ->
     %% First we create the index template
-    TemplatePath = create_random_name(<<"_template/test_template_">>),
-    {ok, _} = erlastic_search:create_index(TemplatePath, template_mapping_json()),
+    IndexTemplateName = create_random_name(<<"test_template_">>),
+    {ok, _} = erlastic_search:create_index_template(IndexTemplateName, template_mapping_json()),
 
     %% When searching for an index template, we should only need the name, not the full path
     %% The get_templates/1 fun should handle creating the correct path
-    [_, TemplateName] = binary:split(TemplatePath, <<"_template/">>),
-    {ok, [{TemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_templates(TemplateName),
+    {ok, [{IndexTemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_index_templates(IndexTemplateName),
 
     %% Also make sure that the get_templates/0 fun returns the same thing as get_templates/1 with the current state
-    {ok, [{TemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_templates(),
+    {ok, [{IndexTemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_index_templates(),
 
     %% The order and aliases are generated automatically, both of which will be default, we will not compare
     ActualTemplateSettingsAndMapping2 = proplists:delete(<<"order">>, ActualTemplateSettingsAndMapping1),
@@ -96,7 +95,9 @@ index_template_mapping(_Config) ->
     ExpectedTemplateMappingAndSettings = ActualTemplateSettingsAndMapping,
 
     %% Remove this index template
-    erlastic_search:delete_index(TemplatePath).
+    erlastic_search:delete_index_template(IndexTemplateName),
+    %% And we confirm that it is removed
+    {ok,[{}]} = erlastic_search:get_index_templates().
 
 %%%===================================================================
 %%% Helper Functions
