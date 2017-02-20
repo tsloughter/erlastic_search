@@ -11,6 +11,8 @@
 -export([create_index/1
         ,create_index/2
         ,create_index/3
+        ,create_index_template/2
+        ,create_index_template/3
         ,stats_index/0
         ,stats_index/1
         ,stats_index/2
@@ -26,6 +28,9 @@
         ,get_settings/0
         ,get_settings/1
         ,get_settings/2
+        ,get_index_templates/0
+        ,get_index_templates/1
+        ,get_index_templates/2
         ,index_doc/3
         ,index_doc/4
         ,index_doc_with_opts/5
@@ -62,6 +67,8 @@
         ,delete_doc_by_query_doc/4
         ,delete_index/1
         ,delete_index/2
+        ,delete_index_template/1
+        ,delete_index_template/2
         ,index_exists/1
         ,index_exists/2
         ,optimize_index/1
@@ -109,6 +116,27 @@ create_index(Index, Doc) when is_binary(Index), (is_binary(Doc) orelse is_list(D
 -spec create_index(#erls_params{}, binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 create_index(Params, Index, Doc) when is_binary(Index), (is_binary(Doc) orelse is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
     erls_resource:put(Params, Index, [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Takes the name of an index and a body to use in the request; and
+%% creates an index template using the default settings on localhost.
+%% (see the doc at https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#indices-templates)
+%% @end
+%%--------------------------------------------------------------------
+-spec create_index_template(Index :: binary(), Doc :: erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+create_index_template(Index, Doc) when is_binary(Index), (is_binary(Doc) orelse is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
+    create_index_template(#erls_params{}, Index, Doc).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Takes a record describing the servers details, an index name, and a request body, and creates an index template
+%% (see the doc at https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#indices-templates)
+%% @end
+%%--------------------------------------------------------------------
+-spec create_index_template(#erls_params{}, binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+create_index_template(Params, Index, Doc) when is_binary(Index), (is_binary(Doc) orelse is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
+    erls_resource:put(Params, <<"_template/", Index/binary>>, [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -244,6 +272,40 @@ get_settings(Index) when is_binary(Index) ->
 -spec get_settings(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 get_settings(#erls_params{} = Params, Index) when is_binary(Index) ->
     erls_resource:get(Params, filename:join([Index, <<"_settings">>]), [], [], [], Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves all index templates, using the default server parameters. See docs at:
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
+%% @end
+%%--------------------------------------------------------------------
+-spec get_index_templates() -> {ok, erlastic_success_result()} | {error, any()}.
+get_index_templates() ->
+    get_index_templates(#erls_params{}, <<>>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the index templates that match the index template string, using the default server parameters
+%% or retrieves all index templates with provided server parameters. See docs at:
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
+%% @end
+%%--------------------------------------------------------------------
+-spec get_index_templates(binary() | #erls_params{}) -> {ok, erlastic_success_result()} | {error, any()}.
+get_index_templates(IndexTemplate) when is_binary(IndexTemplate) ->
+    get_index_templates(#erls_params{}, IndexTemplate);
+get_index_templates(#erls_params{} = Params) ->
+    get_index_templates(Params, <<>>).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Retrieves the index templates that match the index template string, using the provided server
+%% parameters. See docs at:
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#getting
+%% @end
+%%--------------------------------------------------------------------
+-spec get_index_templates(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_index_templates(#erls_params{http_client_options = HttpClientOptions} = Params, IndexTemplate) ->
+    erls_resource:get(Params, filename:join([<<"_template">>, IndexTemplate]), [], [], [], HttpClientOptions).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -451,6 +513,21 @@ delete_index(Index) ->
 delete_index(Params, Index) ->
     erls_resource:delete(Params, Index, [], [], [],
                          Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Delete existing index template
+%% See docs at: https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#delete
+%% @end
+%%--------------------------------------------------------------------
+-spec delete_index_template(binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+delete_index_template(Index) ->
+    delete_index_template(#erls_params{}, Index).
+
+-spec delete_index_template(#erls_params{}, binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+delete_index_template(Params, Index) ->
+    erls_resource:delete(Params, <<"_template/", Index/binary>>, [], [], [],
+        Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc

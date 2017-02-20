@@ -8,7 +8,8 @@
         ,index_encoded_id/1
         ,index_no_id/1
         ,bulk_index_id/1
-        ,search/1]).
+        ,search/1
+        ,index_templates/1]).
 
 -include_lib("common_test/include/ct.hrl").
 -include_lib("eunit/include/eunit.hrl").
@@ -22,7 +23,8 @@ groups() ->
                         ,index_encoded_id
                         ,index_no_id
                         ,bulk_index_id
-                        ,search]}].
+                        ,search
+                        ,index_templates]}].
 
 init_per_group(index_access, Config) ->
     erlastic_search_app:start_deps(),
@@ -70,6 +72,33 @@ search(Config) ->
     IndexName = ?config(index_name, Config),
     {ok, _} = erlastic_search:search(IndexName, <<"hello:there">>).
 
+%% @doc Creates an index template, and tests that it exists with the correct settings and mapping
+index_templates(_Config) ->
+    %% First we create the index template
+    IndexTemplateName = create_random_name(<<"test_template_">>),
+    {ok, _} = erlastic_search:create_index_template(IndexTemplateName, template_mapping_json()),
+
+    %% When searching for an index template, we should only need the name, not the full path
+    %% The get_templates/1 fun should handle creating the correct path
+    {ok, [{IndexTemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_index_templates(IndexTemplateName),
+
+    %% Also make sure that the get_templates/0 fun returns the same thing as get_templates/1 with the current state
+    {ok, [{IndexTemplateName, ActualTemplateSettingsAndMapping1}]} = erlastic_search:get_index_templates(),
+
+    %% The order and aliases are generated automatically, both of which will be default, we will not compare
+    ActualTemplateSettingsAndMapping2 = proplists:delete(<<"order">>, ActualTemplateSettingsAndMapping1),
+    ActualTemplateSettingsAndMapping3 = proplists:delete(<<"aliases">>, ActualTemplateSettingsAndMapping2),
+
+    ExpectedTemplateMappingAndSettings = lists:sort(jsx:decode(jsx:encode(template_mapping_json()))),
+    ActualTemplateSettingsAndMapping = lists:sort(ActualTemplateSettingsAndMapping3),
+
+    ExpectedTemplateMappingAndSettings = ActualTemplateSettingsAndMapping,
+
+    %% Remove this index template
+    erlastic_search:delete_index_template(IndexTemplateName),
+    %% And we confirm that it is removed
+    {ok,[{}]} = erlastic_search:get_index_templates().
+
 %%%===================================================================
 %%% Helper Functions
 %%%===================================================================
@@ -77,3 +106,31 @@ search(Config) ->
 create_random_name(Name) ->
     random:seed(os:timestamp()),
     <<Name/binary, (list_to_binary(erlang:integer_to_list(random:uniform(1000000))))/binary>>.
+
+%% @doc Uses the example template settings from
+%% https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html#indices-templates
+template_mapping_json() ->
+    #{
+        <<"mappings">> => #{
+            <<"test_type">> => #{
+                <<"_source">> => #{
+                    <<"enabled">> => false
+                },
+                <<"properties">> => #{
+                    <<"host_name">> => #{
+                        <<"type">> => <<"string">>
+                    },
+                    <<"created_at">> => #{
+                        <<"type">> => <<"date">>,
+                        <<"format">> => <<"EEE MMM dd HH:mm:ss Z YYYY">>
+                    }
+                }
+            }
+        },
+        <<"settings">> => #{
+            <<"index">> => #{
+                <<"number_of_shards">> => <<"1">>
+            }
+        },
+        <<"template">> => <<"test_template-*">>
+    }.
