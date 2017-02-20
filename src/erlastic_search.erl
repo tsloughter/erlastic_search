@@ -50,6 +50,7 @@
         ,multi_search/2
         ,get_doc/3
         ,get_doc/4
+        ,get_multi_doc/3
         ,get_doc_opts/5
         ,flush_index/1
         ,flush_index/2
@@ -456,6 +457,12 @@ get_doc(Params, Index, Type, Id) ->
                                                                           | {error, any()}.
 get_doc_opts(Params, Index, Type, Id, Opts) ->
     erls_resource:get(Params, filename:join([Index, Type, Id]), [], Opts, Params#erls_params.http_client_options).
+
+-spec get_multi_doc(binary(), binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
+get_multi_doc(Index, Type, Data) ->
+     Params = #erls_params{},
+     erls_resource:post(Params, filename:join([Index, Type, <<"_mget">>]), [], [], erls_json:encode(Data), 
+                        Params#erls_params.http_client_options).
 
 flush_index(Index) ->
     flush_index(#erls_params{}, Index).
