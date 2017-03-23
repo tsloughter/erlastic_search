@@ -13,3 +13,4 @@ _rel
 erl_crash.dump
 logs
 log
+.rebar3

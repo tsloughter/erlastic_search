@@ -1,7 +1,18 @@
+{"1.1.0",
 [{<<"certifi">>,{pkg,<<"certifi">>,<<"0.7.0">>},1},
  {<<"hackney">>,{pkg,<<"hackney">>,<<"1.6.3">>},0},
  {<<"idna">>,{pkg,<<"idna">>,<<"1.0.2">>},1},
  {<<"jsx">>,{pkg,<<"jsx">>,<<"2.6.2">>},0},
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
  {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},1},
- {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.1">>},1}].
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.1">>},1}]}.
+[
+{pkg_hash,[
+ {<<"certifi">>, <<"861A57F3808F7EB0C2D1802AFEAAE0FA5DE813B0DF0979153CBAFCD853ABABAF">>},
+ {<<"hackney">>, <<"D489D7CA2D4323E307BEDC4BFE684323A7BF773ECFD77938F3EE8074E488E140">>},
+ {<<"idna">>, <<"397E3D001C002319DA75759B0A81156BF11849C71D565162436D50020CB7265E">>},
+ {<<"jsx">>, <<"213721E058DA0587A4BCE3CC8A00FF6684CED229C8F9223245C6FF2C88FBAA5A">>},
+ {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
+ {<<"mimerl">>, <<"993F9B0E084083405ED8252B99460C4F0563E41729AB42D9074FD5E52439BE88">>},
+ {<<"ssl_verify_fun">>, <<"28A4D65B7F59893BC2C7DE786DEC1E1555BD742D336043FE644AE956C3497FBE">>}]}
+].

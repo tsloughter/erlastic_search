@@ -415,13 +415,13 @@ search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
 %%--------------------------------------------------------------------
 -spec count(binary() | list(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 count(Index, Query) ->
-    search_helper(<<"_count">>, #erls_params{}, Index, <<>>, Query, []).
+    count(#erls_params{}, Index, <<>>, Query, []).
 
 -spec count(binary() | list() | #erls_params{}, binary() | list(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
 count(Params, Index, Query) when is_record(Params, erls_params) ->
-    search_helper(<<"_count">>, Params, Index, <<>>, Query, []);
+    count(Params, Index, <<>>, Query, []);
 count(Index, Type, Query) ->
-    search_helper(<<"_count">>, #erls_params{}, Index, Type, Query, []).
+    count(#erls_params{}, Index, Type, Query, []).
 
 -spec count(#erls_params{}, list() | binary(), list() | binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
 count(Params, Index, Type, Query, Opts) ->
