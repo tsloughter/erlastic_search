@@ -79,7 +79,13 @@
         ,percolator_del/2
         ,percolator_del/3
         ,percolate/3
-        ,percolate/4]).
+        ,percolate/4
+        ,reindex/1
+        ,reindex/2
+        ,aliases/1
+        ,aliases/2
+]).
+
 
 -include("erlastic_search.hrl").
 
@@ -461,7 +467,7 @@ get_doc_opts(Params, Index, Type, Id, Opts) ->
 -spec get_multi_doc(binary(), binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
 get_multi_doc(Index, Type, Data) ->
      Params = #erls_params{},
-     erls_resource:post(Params, filename:join([Index, Type, <<"_mget">>]), [], [], erls_json:encode(Data), 
+     erls_resource:post(Params, filename:join([Index, Type, <<"_mget">>]), [], [], erls_json:encode(Data),
                         Params#erls_params.http_client_options).
 
 flush_index(Index) ->
@@ -577,6 +583,18 @@ percolate(Index, Type, Doc) ->
 
 percolate(Params, Index, Type, Doc) ->
     erls_resource:get(Params, filename:join([commas(Index), Type, <<"_percolate">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options).
+
+reindex(Body) ->
+    reindex(#erls_params{}, Body).
+
+reindex(Params, Body) ->
+    erls_resource:post(Params, filename:join([<<"_reindex">>]), [], [], erls_json:encode(Body), Params#erls_params.http_client_options).
+
+aliases(Body) ->
+    aliases(#erls_params{}, Body).
+
+aliases(Params, Body) ->
+    erls_resource:post(Params, filename:join([<<"_aliases">>]), [], [], erls_json:encode(Body), Params#erls_params.http_client_options).
 
 %%% Internal functions
 
