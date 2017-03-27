@@ -44,6 +44,9 @@
         ,search/2
         ,search/3
         ,search/5
+        ,count/2
+        ,count/3
+        ,count/5
         ,search_limit/4
         ,search_scroll/4
         ,search_scroll/1
@@ -411,6 +414,27 @@ search_limit(Index, Type, Query, Limit) when is_integer(Limit) ->
 
 %%--------------------------------------------------------------------
 %% @doc
+%% Uses the count API to execute a query and get the number of matches
+%% for that query. See `search/*' for more details regarding to
+%% query types and the different input parameters.
+%% @end
+%%--------------------------------------------------------------------
+-spec count(binary() | list(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+count(Index, Query) ->
+    count(#erls_params{}, Index, <<>>, Query, []).
+
+-spec count(binary() | list() | #erls_params{}, binary() | list(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+count(Params, Index, Query) when is_record(Params, erls_params) ->
+    count(Params, Index, <<>>, Query, []);
+count(Index, Type, Query) ->
+    count(#erls_params{}, Index, Type, Query, []).
+
+-spec count(#erls_params{}, list() | binary(), list() | binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
+count(Params, Index, Type, Query, Opts) ->
+    search_helper(<<"_count">>, Params, Index, Type, Query, Opts).
+
+%%--------------------------------------------------------------------
+%% @doc
 %% search_scroll/4 -- Takes the index, type name and search query
 %% sends it to the Elasticsearch server specified in Params.
 %% Returns search results along with scroll id which can be passed
@@ -427,10 +451,8 @@ search_scroll(Query) ->
      erls_resource:post(Params, filename:join([<<"_search">>, <<"scroll">>]), [], [], erls_json:encode(Query), Params#erls_params.http_client_options).
 
 -spec search(#erls_params{}, list() | binary(), list() | binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
-search(Params, Index, Type, Query, Opts) when is_binary(Query) ->
-    erls_resource:get(Params, filename:join([commas(Index), Type, <<"_search">>]), [], [{<<"q">>, Query}]++Opts, Params#erls_params.http_client_options);
 search(Params, Index, Type, Query, Opts) ->
-    erls_resource:post(Params, filename:join([commas(Index), Type, <<"_search">>]), [], Opts, erls_json:encode(Query), Params#erls_params.http_client_options).
+    search_helper(<<"_search">>, Params, Index, Type, Query, Opts).
 
 -spec multi_search(#erls_params{}, list({HeaderInformation :: headers(), SearchRequest :: erlastic_json() | binary()})) -> {ok, ResultJson :: erlastic_success_result()} | {error, Reason :: any()}.
 multi_search(Params, HeaderJsonTuples) ->
@@ -597,6 +619,12 @@ aliases(Params, Body) ->
     erls_resource:post(Params, filename:join([<<"_aliases">>]), [], [], erls_json:encode(Body), Params#erls_params.http_client_options).
 
 %%% Internal functions
+
+-spec search_helper(binary(), #erls_params{}, list() | binary(), list() | binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
+search_helper(Endpoint, Params, Index, Type, Query, Opts) when is_binary(Query) ->
+    erls_resource:get(Params, filename:join([commas(Index), Type, Endpoint]), [], [{<<"q">>, Query}]++Opts, Params#erls_params.http_client_options);
+search_helper(Endpoint, Params, Index, Type, Query, Opts) ->
+    erls_resource:post(Params, filename:join([commas(Index), Type, Endpoint]), [], Opts, erls_json:encode(Query), Params#erls_params.http_client_options).
 
 -spec commas(list(binary()) | binary()) -> binary().
 commas(Bin) when is_binary(Bin) ->
