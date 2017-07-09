@@ -37,6 +37,9 @@
         ,index_doc_with_id/4
         ,index_doc_with_id/5
         ,index_doc_with_id_opts/6
+        ,update_doc/4
+        ,update_doc/5
+        ,update_doc_opts/6
         ,upsert_doc/4
         ,upsert_doc/5
         ,upsert_doc_opts/6
@@ -357,6 +360,27 @@ index_doc_with_id_opts(Params, Index, Type, undefined, Doc, Opts) ->
 index_doc_with_id_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts) ->
     erls_resource:post(Params, filename:join([Index, Type, Id]), [], Opts, maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
+%%--------------------------------------------------------------------
+%% @doc Update the document partly.The Doc Id must exist.
+%% (https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html#_updates_with_a_partial_document)
+%% --------------------------------------------------------------------
+
+-spec update_doc(binary(), binary(), binary(), erlastic_json()) -> {ok, erlastic_success_result()} | {error, any()}.
+update_doc(Index, Type, Id, Doc) ->
+    update_doc_opts(#erls_params{}, Index, Type, Id, Doc, []).
+
+-spec update_doc(#erls_params{}, binary(), binary(), binary(), erlastic_json()) -> {ok, erlastic_success_result()} | {error, any()}.
+update_doc(Params, Index, Type, Id, Doc) ->
+    update_doc_opts(Params, Index, Type, Id, Doc, []).
+
+-spec update_doc_opts(#erls_params{}, binary(), binary(), binary(), erlastic_json(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
+update_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list(Doc) orelse is_tuple(Doc) orelse is_map(Doc)) ->
+    DocBin = erls_json:encode(Doc),
+    %% we cannot use erls_json to generate this, see the doc string for `erls_json:encode/1'
+    Body = <<"{\"doc\":", DocBin/binary, "}">>,
+    erls_resource:post(Params, filename:join([Index, Type, Id, "_update"]), [], Opts,
+        Body,
+        Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc Insert the document, or replacing it when it already exists (upsert)
