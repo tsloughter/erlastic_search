@@ -2,7 +2,10 @@ sudo: false
 install: true
 language: erlang
 otp_release:
-  - 18.0
+  - 20.0
+  - 19.3
+  - 18.3
+
 before_script: "./rebar3 update"
 script: "./rebar3 dialyzer"
 cache:
