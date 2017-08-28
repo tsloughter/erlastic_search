@@ -78,6 +78,8 @@
         ,delete_index_template/2
         ,index_exists/1
         ,index_exists/2
+        ,index_template_exists/1
+        ,index_template_exists/2
         ,optimize_index/1
         ,optimize_index/2
         ,percolator_add/3
@@ -600,11 +602,26 @@ index_exists(Index) ->
 
 -spec index_exists(#erls_params{}, binary()) -> {ok, boolean()} | {error, any()}.
 index_exists(Params, Index) ->
-    case erls_resource:head(Params, Index, [], [], Params#erls_params.http_client_options) of
-        ok -> {ok, true};
-        {error, 404} -> {ok, false};
-        {error, _Else} = Error -> Error
-    end.
+    exists(erls_resource:head(Params, Index, [], [], Params#erls_params.http_client_options)).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Tests if a given index template exists
+%% See https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
+%% @end
+%%--------------------------------------------------------------------
+-spec index_template_exists(binary()) -> {ok, boolean()} | {error, any()}.
+index_template_exists(IndexTemplate) ->
+    index_template_exists(#erls_params{}, IndexTemplate).
+
+-spec index_template_exists(#erls_params{}, binary()) -> {ok, boolean()} | {error, any()}.
+index_template_exists(Params, IndexTemplate) ->
+    exists(erls_resource:head(Params, filename:join([<<"_template">>, IndexTemplate]), [], [], Params#erls_params.http_client_options)).
+
+%% @private
+exists(ok) -> {ok, true};
+exists({error, 404}) -> {ok, false};
+exists({error, _Else} = Error) -> Error.
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
