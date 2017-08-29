@@ -44,6 +44,7 @@
         ,upsert_doc/5
         ,upsert_doc_opts/6
         ,bulk_index_docs/2
+        ,bulk_index_docs/1
         ,search/2
         ,search/3
         ,search/5
@@ -403,6 +404,11 @@ upsert_doc_opts(Params, Index, Type, Id, Doc, Opts) when is_list(Opts), (is_list
     erls_resource:post(Params, filename:join([Index, Type, Id, "_update"]), [], Opts,
                        Body,
                        Params#erls_params.http_client_options).
+
+%% Bulk index docs with default params
+-spec bulk_index_docs(list()) -> {ok, list} | {error, any()}.
+bulk_index_docs(IndexTypeIdJsonTuples) ->
+    bulk_index_docs(#erls_params{}, IndexTypeIdJsonTuples).
 
 %% Documents is [ {Index, Type, Id, Json}, {Index, Type, Id, HeaderInformation, Json}... ]
 -spec bulk_index_docs(#erls_params{}, list()) -> {ok, list()} | {error, any()}.
