@@ -91,6 +91,8 @@
         ,reindex/2
         ,aliases/1
         ,aliases/2
+        ,bulk_operation/1
+        ,bulk_operation/2
 ]).
 
 
@@ -648,6 +650,30 @@ aliases(Body) ->
 aliases(Params, Body) ->
     erls_resource:post(Params, filename:join([<<"_aliases">>]), [], [], erls_json:encode(Body), Params#erls_params.http_client_options).
 
+%% Bulk operations with default params
+-spec bulk_operation(list()) -> {ok, list} | {error, any()}.
+bulk_operation(OperationIndexTypeIdJsonTuples) ->
+    bulk_operation(#erls_params{}, OperationIndexTypeIdJsonTuples).
+
+%% Documents is [ {Index, Type, Id, Json}, {Index, Type, Id, HeaderInformation, Json}... ]
+-spec bulk_operation(#erls_params{}, list()) -> {ok, list()} | {error, any()}.
+bulk_operation(Params, OperationIndexTypeIdJsonTuples) ->
+    Body = lists:map(fun
+                       Build({delete, Index, Type, Id}) ->
+                         Build({delete, Index, Type, Id, [], []});
+                       Build({delete, Index, Type, Id, HeaderInformation}) ->
+                         Build({delete, Index, Type, Id, HeaderInformation, []});
+                       Build({Operation, Index, Type, Id, Doc}) ->
+                         Build({Operation, Index, Type, Id, [], Doc});
+                       Build({Operation, Index, Type, Id, HeaderInformation, Doc}) ->
+                         Header = build_header(Operation, Index, Type, Id, HeaderInformation),
+                         DocBin = maybe_encode_doc(Doc),
+                         Json = maybe_add_doc_for_update(DocBin),
+                         [Header, <<"\n">>, Json, <<"\n">>]
+                     end, OperationIndexTypeIdJsonTuples),
+
+    erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
+
 %%% Internal functions
 
 -spec search_helper(binary(), #erls_params{}, list() | binary(), list() | binary(), erlastic_json() | binary(), list()) -> {ok, erlastic_success_result()} | {error, any()}.
@@ -683,3 +709,24 @@ bulk_index_docs_header(Index, Type, Id, HeaderInformation) ->
 -spec maybe_encode_doc(binary() | erlastic_json()) -> binary().
 maybe_encode_doc(Bin) when is_binary(Bin) -> Bin;
 maybe_encode_doc(Doc) when is_list(Doc); is_tuple(Doc); is_map(Doc) -> erls_json:encode(Doc).
+
+build_header(Operation, Index, Type, Id, HeaderInformation) ->
+    Header1 = [
+      {<<"_index">>, Index}
+      | HeaderInformation
+    ],
+
+    Header2 = case Type =:= undefined of
+                true -> Header1;
+                false -> [{<<"_type">>, Type} | Header1]
+              end,
+
+    Header3 = case Id =:= undefined of
+                true -> Header2;
+                false -> [{<<"_id">>, Id} | Header2]
+              end,
+
+    jsx:encode([{erlang:atom_to_binary(Operation, utf8), Header3}]).
+
+maybe_add_doc_for_update(DocBin) ->
+  <<"{\"doc\":", DocBin/binary, "}">>.
