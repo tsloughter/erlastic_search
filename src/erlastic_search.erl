@@ -79,6 +79,8 @@
         ,delete_index_template/2
         ,index_exists/1
         ,index_exists/2
+        ,index_template_exists/1
+        ,index_template_exists/2
         ,optimize_index/1
         ,optimize_index/2
         ,percolator_add/3
@@ -601,11 +603,26 @@ index_exists(Index) ->
 
 -spec index_exists(#erls_params{}, binary()) -> {ok, boolean()} | {error, any()}.
 index_exists(Params, Index) ->
-    case erls_resource:head(Params, Index, [], [], Params#erls_params.http_client_options) of
-        ok -> {ok, true};
-        {error, 404} -> {ok, false};
-        {error, _Else} = Error -> Error
-    end.
+    exists(erls_resource:head(Params, Index, [], [], Params#erls_params.http_client_options)).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Tests if a given index template exists
+%% See https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates.html
+%% @end
+%%--------------------------------------------------------------------
+-spec index_template_exists(binary()) -> {ok, boolean()} | {error, any()}.
+index_template_exists(IndexTemplate) ->
+    index_template_exists(#erls_params{}, IndexTemplate).
+
+-spec index_template_exists(#erls_params{}, binary()) -> {ok, boolean()} | {error, any()}.
+index_template_exists(Params, IndexTemplate) ->
+    exists(erls_resource:head(Params, filename:join([<<"_template">>, IndexTemplate]), [], [], Params#erls_params.http_client_options)).
+
+%% @private
+exists(ok) -> {ok, true};
+exists({error, 404}) -> {ok, false};
+exists({error, _Else} = Error) -> Error.
 
 optimize_index(Index) ->
     optimize_index(#erls_params{}, Index).
@@ -724,3 +741,24 @@ build_body(_Operation, Doc) ->
 -spec maybe_encode_doc(binary() | erlastic_json()) -> binary().
 maybe_encode_doc(Bin) when is_binary(Bin) -> Bin;
 maybe_encode_doc(Doc) when is_list(Doc); is_tuple(Doc); is_map(Doc) -> erls_json:encode(Doc).
+
+build_header(Operation, Index, Type, Id, HeaderInformation) ->
+    Header1 = [
+      {<<"_index">>, Index}
+      | HeaderInformation
+    ],
+
+    Header2 = case Type =:= undefined of
+                true -> Header1;
+                false -> [{<<"_type">>, Type} | Header1]
+              end,
+
+    Header3 = case Id =:= undefined of
+                true -> Header2;
+                false -> [{<<"_id">>, Id} | Header2]
+              end,
+
+    jsx:encode([{erlang:atom_to_binary(Operation, utf8), Header3}]).
+
+maybe_add_doc_for_update(DocBin) ->
+  <<"{\"doc\":", DocBin/binary, "}">>.
