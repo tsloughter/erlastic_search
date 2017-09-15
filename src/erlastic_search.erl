@@ -671,11 +671,10 @@ aliases(Params, Body) ->
 -type index() :: binary().
 -type type() :: binary().
 -type id() :: binary() | undefined.
--type headers() :: [tuple()].
 -type metadata_tuple() :: {index(), type(), id()} |
                           {index(), type(), id(), headers()} |
-                          {index(), type(), id(), json()} |
-                          {index(), type(), id(), json(), headers()}.
+                          {index(), type(), id(), erlastic_json()} |
+                          {index(), type(), id(), erlastic_json(), headers()}.
 -type operation() :: {index | create | delete | update, metadata_tuple()}.
 
 -spec bulk_operation([operation()]) -> {ok, list()} | {error, any()}.
@@ -742,23 +741,3 @@ build_body(_Operation, Doc) ->
 maybe_encode_doc(Bin) when is_binary(Bin) -> Bin;
 maybe_encode_doc(Doc) when is_list(Doc); is_tuple(Doc); is_map(Doc) -> erls_json:encode(Doc).
 
-build_header(Operation, Index, Type, Id, HeaderInformation) ->
-    Header1 = [
-      {<<"_index">>, Index}
-      | HeaderInformation
-    ],
-
-    Header2 = case Type =:= undefined of
-                true -> Header1;
-                false -> [{<<"_type">>, Type} | Header1]
-              end,
-
-    Header3 = case Id =:= undefined of
-                true -> Header2;
-                false -> [{<<"_id">>, Id} | Header2]
-              end,
-
-    jsx:encode([{erlang:atom_to_binary(Operation, utf8), Header3}]).
-
-maybe_add_doc_for_update(DocBin) ->
-  <<"{\"doc\":", DocBin/binary, "}">>.
