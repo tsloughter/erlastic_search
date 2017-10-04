@@ -725,7 +725,7 @@ build_header(Operation, Index, Type, Id, HeaderInformation) ->
                 false -> [{<<"_id">>, Id} | Header1]
               end,
 
-    jsx:encode([{erlang:atom_to_binary(Operation, utf8), Header2}]).
+    [jsx:encode([{erlang:atom_to_binary(Operation, utf8), Header2}])].
 
 build_body(delete, no_body) ->
     [<<"\n">>];
