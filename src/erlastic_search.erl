@@ -559,10 +559,10 @@ delete_doc_by_query_doc(Index, Type, Doc) ->
     delete_doc_by_query_doc(#erls_params{}, Index, Type, Doc).
 
 delete_doc_by_query_doc(Params, Index, any, Doc) ->
-    erls_resource:delete(Params, filename:join([Index, <<"_query">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options);
+    erls_resource:post(Params, filename:join([Index, <<"_delete_by_query">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options);
 
 delete_doc_by_query_doc(Params, Index, Type, Doc) ->
-    erls_resource:delete(Params, filename:join([Index, Type, <<"_query">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options).
+    erls_resource:post(Params, filename:join([Index, Type, <<"_delete_by_query">>]), [], [], erls_json:encode(Doc), Params#erls_params.http_client_options).
 
 %%--------------------------------------------------------------------
 %% @doc
