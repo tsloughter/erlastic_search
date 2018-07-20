@@ -95,6 +95,8 @@
         ,aliases/2
         ,bulk_operation/1
         ,bulk_operation/2
+        ,put_setting/2
+        ,put_setting/3
 ]).
 
 
@@ -696,6 +698,19 @@ bulk_operation(Params, OperationIndexTypeIdJsonTuples) ->
                      end, OperationIndexTypeIdJsonTuples),
 
     erls_resource:post(Params, <<"/_bulk">>, [], [], iolist_to_binary(Body), Params#erls_params.http_client_options).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Insert a setting into an Elasticsearch index
+%% @end
+%%--------------------------------------------------------------------
+-spec put_setting(binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+put_setting(Index, Doc) ->
+  put_setting(#erls_params{}, Index, Doc).
+
+-spec put_setting(#erls_params{}, binary(), erlastic_json() | binary()) -> {ok, erlastic_success_result()} | {error, any()}.
+put_setting(Params, Index, Doc) ->
+  erls_resource:put(Params, filename:join([Index, "_settings"]), [], [], maybe_encode_doc(Doc), Params#erls_params.http_client_options).
 
 %%% Internal functions
 
