@@ -6,7 +6,9 @@ otp_release:
   - 19.3
   - 18.3
 
-before_install: docker-compose -f docker-compose.yml up
+before_install: 
+  - docker-compose -d -f docker-compose.yml up
+  - until curl --silent -XGET --fail http://localhost:9200; do printf '.'; sleep 1; done
 before_script: "rebar3 update"
 script: "rebar3 ct && rebar3 dialyzer"
 cache:
