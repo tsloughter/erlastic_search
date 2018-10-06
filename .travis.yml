@@ -6,8 +6,8 @@ otp_release:
   - 19.3
   - 18.3
 
-before_script: "./rebar3 update"
-script: "./rebar3 dialyzer"
+before_script: "rebar3 update"
+script: "rebar3 dialyzer"
 cache:
   directories:
   - $HOME/.cache/rebar3/
