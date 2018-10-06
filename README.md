@@ -34,7 +34,7 @@ erlastic_search:index_doc(<<"index_name">>, <<"type">>, [{<<"key1">>, <<"value1"
 
 Index a document (providing a document id) : 
 
-````erlang
+```erlang
 erlastic_search:index_doc_with_id(<<"index_name">>, <<"type">>, <<"id1">>, [{<<"key1">>, <<"value1">>}]).
 ```
 
