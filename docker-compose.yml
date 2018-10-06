@@ -1,8 +1,13 @@
 version: '3'
 services:
-    kibana:
-        image: kibana:5.0
-        links:
-            - elasticsearch
+    elasticsearch:
+        image: elasticsearch:5.3.2-alpine
         ports:
-            - 5601:5601
+            - 9200:9200
+        volumes:
+          - elasticsearch-data:/usr/share/elasticsearch/data
+        environment:
+            ES_JAVA_OPTS: "-Xms500m -Xmx500m"
+volumes:
+    elasticsearch-data: {}
+
