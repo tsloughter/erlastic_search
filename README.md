@@ -96,7 +96,6 @@ docker-compose -f docker-compose.yml -f docker-compose-kibana.yml up
 Run Common Test:
 
 ```bash
-<<<<<<< Updated upstream
 rebar3 ct
 ```
 
