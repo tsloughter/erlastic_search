@@ -1,0 +1,8 @@
+version: '3'
+services:
+    kibana:
+        image: kibana:5.0
+        links:
+            - elasticsearch
+        ports:
+            - 5601:5601

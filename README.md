@@ -9,13 +9,13 @@ Build and Run
 Start a rebar3 shell 
 
 ```shell
-$ rebar3 shell
+rebar3 shell
 ```
 
 Create an index :
 
 ```erlang
-(erlastic@127.0.0.1)1> erlastic_search:create_index(<<"index_name">>).
+erlastic_search:create_index(<<"index_name">>).
 ```
 ```
 {ok, [{<<"ok">>,true},{<<"acknowledged">>,true}]}
@@ -81,16 +81,22 @@ erlastic_search:search(<<"index_name">>, <<"type">>, <<"key1:value1">>).
 Testing
 -------
 
-First start a local Elasticsearch:
+In another terminal use docker-compose to start an Elasticsearch instance :
 
 ```bash
-$ bin/elasticsearch
+docker-compose up
+```
+
+For convenience, you can also start a Kibana instance for analysis/visualization :
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose-kibana.yml up
 ```
 
 Run Common Test:
 
 ```bash
-$ rebar3 ct
+rebar3 ct
 ```
 
 Using another JSON library than `jsx`
