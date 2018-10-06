@@ -9,7 +9,7 @@ Build and Run
 Start a rebar3 shell 
 
 ```shell
-$ ./rebar3 shell
+$ rebar3 shell
 ```
 
 Create an index :
@@ -90,7 +90,7 @@ $ bin/elasticsearch
 Run Common Test:
 
 ```bash
-$ ./rebar3 ct
+$ rebar3 ct
 ```
 
 Using another JSON library than `jsx`
