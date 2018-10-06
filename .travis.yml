@@ -5,6 +5,7 @@ otp_release:
   - 20.0
   - 19.3
   - 18.3
+
 before_install: docker-compose up
 before_script: "rebar3 update"
 script: "rebar3 ct && rebar3 dialyzer"
