@@ -16,6 +16,8 @@ Create an index :
 
 ```erlang
 (erlastic@127.0.0.1)1> erlastic_search:create_index(<<"index_name">>).
+```
+```
 {ok, [{<<"ok">>,true},{<<"acknowledged">>,true}]}
 ```
 
@@ -24,7 +26,7 @@ Index a document :
 ```erlang
 erlastic_search:index_doc(<<"index_name">>, <<"type">>, [{<<"key1">>, <<"value1">>}]).
 ```
-```shell
+```
 {ok,[{<<"ok">>,true},
      {<<"_index">>,<<"index_name">>},
      {<<"_type">>,<<"type">>},
@@ -37,8 +39,7 @@ Index a document (providing a document id) :
 ```erlang
 erlastic_search:index_doc_with_id(<<"index_name">>, <<"type">>, <<"id1">>, [{<<"key1">>, <<"value1">>}]).
 ```
-
-```shell
+```
 {ok,[{<<"ok">>,true},
      {<<"_index">>,<<"index_name">>},
      {<<"_type">>,<<"type">>},
@@ -51,8 +52,7 @@ Search for a document :
 ```erlang
 erlastic_search:search(<<"index_name">>, <<"type">>, <<"key1:value1">>).
 ```
-
-```shell
+```
 {ok,[{<<"took">>,6},
      {<<"timed_out">>,false},
      {<<"_shards">>,
