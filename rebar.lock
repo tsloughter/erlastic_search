@@ -1,18 +1,22 @@
 {"1.1.0",
-[{<<"certifi">>,{pkg,<<"certifi">>,<<"0.7.0">>},1},
- {<<"hackney">>,{pkg,<<"hackney">>,<<"1.6.3">>},0},
- {<<"idna">>,{pkg,<<"idna">>,<<"1.0.2">>},1},
- {<<"jsx">>,{pkg,<<"jsx">>,<<"2.6.2">>},0},
+[{<<"certifi">>,{pkg,<<"certifi">>,<<"2.4.2">>},1},
+ {<<"hackney">>,{pkg,<<"hackney">>,<<"1.14.3">>},0},
+ {<<"idna">>,{pkg,<<"idna">>,<<"6.0.0">>},1},
+ {<<"jsx">>,{pkg,<<"jsx">>,<<"2.9.0">>},0},
  {<<"metrics">>,{pkg,<<"metrics">>,<<"1.0.1">>},1},
  {<<"mimerl">>,{pkg,<<"mimerl">>,<<"1.0.2">>},1},
- {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.1">>},1}]}.
+ {<<"parse_trans">>,{pkg,<<"parse_trans">>,<<"3.3.0">>},2},
+ {<<"ssl_verify_fun">>,{pkg,<<"ssl_verify_fun">>,<<"1.1.4">>},1},
+ {<<"unicode_util_compat">>,{pkg,<<"unicode_util_compat">>,<<"0.4.1">>},2}]}.
 [
 {pkg_hash,[
- {<<"certifi">>, <<"861A57F3808F7EB0C2D1802AFEAAE0FA5DE813B0DF0979153CBAFCD853ABABAF">>},
- {<<"hackney">>, <<"D489D7CA2D4323E307BEDC4BFE684323A7BF773ECFD77938F3EE8074E488E140">>},
- {<<"idna">>, <<"397E3D001C002319DA75759B0A81156BF11849C71D565162436D50020CB7265E">>},
- {<<"jsx">>, <<"213721E058DA0587A4BCE3CC8A00FF6684CED229C8F9223245C6FF2C88FBAA5A">>},
+ {<<"certifi">>, <<"75424FF0F3BAACCFD34B1214184B6EF616D89E420B258BB0A5EA7D7BC628F7F0">>},
+ {<<"hackney">>, <<"B5F6F5DCC4F1FBA340762738759209E21914516DF6BE440D85772542D4A5E412">>},
+ {<<"idna">>, <<"689C46CBCDF3524C44D5F3DDE8001F364CD7608A99556D8FBD8239A5798D4C10">>},
+ {<<"jsx">>, <<"D2F6E5F069C00266CAD52FB15D87C428579EA4D7D73A33669E12679E203329DD">>},
  {<<"metrics">>, <<"25F094DEA2CDA98213CECC3AEFF09E940299D950904393B2A29D191C346A8486">>},
  {<<"mimerl">>, <<"993F9B0E084083405ED8252B99460C4F0563E41729AB42D9074FD5E52439BE88">>},
- {<<"ssl_verify_fun">>, <<"28A4D65B7F59893BC2C7DE786DEC1E1555BD742D336043FE644AE956C3497FBE">>}]}
+ {<<"parse_trans">>, <<"09765507A3C7590A784615CFD421D101AEC25098D50B89D7AA1D66646BC571C1">>},
+ {<<"ssl_verify_fun">>, <<"F0EAFFF810D2041E93F915EF59899C923F4568F4585904D010387ED74988E77B">>},
+ {<<"unicode_util_compat">>, <<"D869E4C68901DD9531385BB0C8C40444EBF624E60B6962D95952775CAC5E90CD">>}]}
 ].

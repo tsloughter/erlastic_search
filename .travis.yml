@@ -2,15 +2,22 @@ sudo: false
 install: true
 language: erlang
 otp_release:
-  - 20.0
+  - 22.0.7
+  - 21.1.2
+  - 20.3
   - 19.3
   - 18.3
 
-before_install: 
+before_install:
   - docker-compose -f docker-compose.yml up -d
   - until curl --silent -XGET --fail http://localhost:9200; do printf '.'; sleep 1; done
-before_script: "rebar3 update"
-script: "rebar3 ct && rebar3 dialyzer"
+
+script:
+  - wget -c https://github.com/erlang/rebar3/releases/download/3.6.2/rebar3
+  - chmod +x rebar3
+  - ./rebar3 update
+  - ./rebar3 do ct, dialyzer
+
 cache:
   directories:
   - $HOME/.cache/rebar3/
