@@ -89,7 +89,7 @@ index_templates(_Config) ->
     ActualTemplateSettingsAndMapping2 = proplists:delete(<<"order">>, ActualTemplateSettingsAndMapping1),
     ActualTemplateSettingsAndMapping3 = proplists:delete(<<"aliases">>, ActualTemplateSettingsAndMapping2),
 
-    ExpectedTemplateMappingAndSettings = lists:sort(jsx:decode(jsx:encode(template_mapping_json()))),
+    ExpectedTemplateMappingAndSettings = lists:sort(erls_json:decode(erls_json:encode(template_mapping_json()))),
     ActualTemplateSettingsAndMapping = lists:sort(ActualTemplateSettingsAndMapping3),
 
     ExpectedTemplateMappingAndSettings = ActualTemplateSettingsAndMapping,
