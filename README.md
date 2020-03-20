@@ -12,6 +12,11 @@ Start a rebar3 shell
 rebar3 shell
 ```
 
+Make sure hackney is started
+```shell
+application:ensure_all_started(hackney).
+```
+
 Create an index :
 
 ```erlang
